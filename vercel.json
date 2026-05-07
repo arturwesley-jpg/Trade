@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm run build -w packages/shared && npm run build -w packages/trading-core && npm run build -w packages/exchange && npm run build -w apps/web",
-  "outputDirectory": "apps/web/dist",
+  "buildCommand": "npm install && npm run build -w src/packages/shared && npm run build -w src/packages/trading-core && npm run build -w src/packages/exchange && npm run build -w src/apps/web",
+  "outputDirectory": "src/apps/web/dist",
   "framework": "vite",
   "installCommand": "npm install --legacy-peer-deps",
-  "devCommand": "npm run dev --workspace=apps/web",
+  "devCommand": "npm run dev -w src/apps/web",
   "cleanUrls": true,
   "trailingSlash": false,
-  "ignoreCommand": "bash -c 'git diff HEAD^ HEAD --quiet -- apps/web packages || exit 1'",
+  "ignoreCommand": "bash -c 'git diff HEAD^ HEAD --quiet -- src/apps/web src/packages || exit 1'",
   "build": {
     "env": {
       "NODE_OPTIONS": "--max-old-space-size=4096"
