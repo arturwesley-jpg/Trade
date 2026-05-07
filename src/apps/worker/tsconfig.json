@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/exchange" },
+    { "path": "../../packages/trading-core" }
+  ],
+  "include": ["src/**/*.ts"]
+}

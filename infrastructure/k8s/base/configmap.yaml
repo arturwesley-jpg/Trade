@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-bot-config
+  namespace: trading-bot
+data:
+  APP_ENV: "production"
+  APP_MODE: "paper"
+  SAFE_MODE: "true"
+  API_PORT: "4000"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+
+  # Market configuration
+  MARKET_PROVIDER_PRIMARY: "binance"
+  MARKET_PROVIDER_FALLBACK_1: "bybit"
+  MARKET_PROVIDER_FALLBACK_2: "okx"
+  MARKET_SYMBOLS: "BTC-USDT,ETH-USDT"
+  MARKET_POLL_INTERVAL_MS: "1000"
+
+  # Risk management
+  MAX_POSITIONS: "5"
+  MAX_MARGIN_PER_POSITION: "100"
+  TOTAL_MARGIN_LIMIT: "500"
+  POSITION_MONITOR_ENABLED: "true"
+
+  # Paper trading
+  PAPER_MAKER_FEE_PCT: "0.075"
+  PAPER_TAKER_FEE_PCT: "0.075"
+  PAPER_SLIPPAGE_PCT: "0.05"
+
+  # Performance
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  WORKER_THREADS: "4"
+
+  # Feature flags
+  FEATURE_SENTIMENT_ANALYSIS: "true"
+  FEATURE_ML_PREDICTIONS: "false"
+  FEATURE_ADVANCED_CHARTS: "true"

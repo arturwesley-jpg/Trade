@@ -1,0 +1,51 @@
+services:
+  # API Service - usando buildpack em vez de Docker
+  - type: web
+    name: trade-api
+    env: node
+    region: oregon
+    plan: starter
+    branch: main
+    buildCommand: npm install --legacy-peer-deps && npm run build -w src/packages/shared && npm run build -w src/packages/trading-core && npm run build -w src/packages/exchange && npm run build -w src/apps/api
+    startCommand: node src/apps/api/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: BINANCE_API_KEY
+        sync: false
+      - key: BINANCE_API_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: trade-postgres
+    databaseName: trade
+    user: trade
+    region: oregon
+    plan: starter
+    ipAllowList: []
+
+  - name: trade-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru

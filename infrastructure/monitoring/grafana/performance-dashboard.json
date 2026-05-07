@@ -1,0 +1,330 @@
+{
+  "dashboard": {
+    "title": "Trading Bot - Performance Dashboard",
+    "tags": ["performance", "trading-bot"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Response Time (p50, p95, p99)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[1m])) by (method, status)",
+            "legendFormat": "{{method}} - {{status}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (%)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "5xx Error Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+            "legendFormat": "4xx Error Rate",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error Rate"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [5], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "High Error Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Cache Hit Rate (%)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(cache_hits_total[5m])) / (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m]))) * 100",
+            "legendFormat": "L1 Cache Hit Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(redis_cache_hits_total[5m])) / (sum(rate(redis_cache_hits_total[5m])) + sum(rate(redis_cache_misses_total[5m]))) * 100",
+            "legendFormat": "L2 (Redis) Hit Rate",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Hit Rate", "min": 0, "max": 100},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(database_query_duration_seconds_bucket[5m])) by (le, query_type))",
+            "legendFormat": "{{query_type}} p95",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Query Duration"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "database_connections_active",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "database_connections_idle",
+            "legendFormat": "Idle Connections",
+            "refId": "B"
+          },
+          {
+            "expr": "database_connections_max",
+            "legendFormat": "Max Connections",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "CPU Usage (%)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "avg(rate(container_cpu_usage_seconds_total{namespace=\"trading-bot\"}[5m])) by (pod) * 100",
+            "legendFormat": "{{pod}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "CPU Usage", "min": 0, "max": 100},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "container_memory_working_set_bytes{namespace=\"trading-bot\"} / 1024 / 1024",
+            "legendFormat": "{{pod}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "mbytes", "label": "Memory Usage"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Network I/O",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 32, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"trading-bot\"}[5m])) by (pod) / 1024",
+            "legendFormat": "{{pod}} RX",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"trading-bot\"}[5m])) by (pod) / 1024",
+            "legendFormat": "{{pod}} TX",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "KBs", "label": "Network I/O"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Disk I/O",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 32, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(container_fs_reads_bytes_total{namespace=\"trading-bot\"}[5m])) by (pod) / 1024",
+            "legendFormat": "{{pod}} Read",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(container_fs_writes_bytes_total{namespace=\"trading-bot\"}[5m])) by (pod) / 1024",
+            "legendFormat": "{{pod}} Write",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "KBs", "label": "Disk I/O"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 11,
+        "title": "WebSocket Connections",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(websocket_connections_active)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 12,
+        "title": "Active Users",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(active_users_total)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 13,
+        "title": "Open Positions",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(positions_open_total)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 14,
+        "title": "Pending Orders",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 40, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(orders_pending_total)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 15,
+        "title": "API Endpoint Performance",
+        "type": "table",
+        "gridPos": {"x": 0, "y": 44, "w": 24, "h": 8},
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(http_request_duration_seconds_sum[5m])) by (endpoint) / sum(rate(http_request_duration_seconds_count[5m])) by (endpoint))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {},
+              "renameByName": {
+                "endpoint": "Endpoint",
+                "Value": "Avg Response Time (s)"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

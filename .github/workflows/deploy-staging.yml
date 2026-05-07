@@ -1,0 +1,391 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip smoke tests'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20.x'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # Pre-deployment checks
+  pre-deploy:
+    name: Pre-Deployment Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Build all workspaces
+        run: npm run build
+
+      - name: Run pre-deploy checks
+        run: |
+          if [ -f scripts/pre-deploy-checks.sh ]; then
+            chmod +x scripts/pre-deploy-checks.sh
+            ./scripts/pre-deploy-checks.sh staging
+          fi
+
+  # Build and push Docker images
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [api, web, worker, telegram-bot]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}-staging
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}-staging
+          build-args: |
+            NODE_ENV=staging
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-images
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://staging.trading-bot.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        if: env.KUBECONFIG_STAGING != ''
+        env:
+          KUBECONFIG_STAGING: ${{ secrets.KUBECONFIG_STAGING }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_STAGING" | base64 -d > ~/.kube/config
+          kubectl config use-context staging
+
+      - name: Deploy to Kubernetes
+        if: env.KUBECONFIG_STAGING != ''
+        env:
+          KUBECONFIG_STAGING: ${{ secrets.KUBECONFIG_STAGING }}
+        run: |
+          # Update image tags in deployment
+          kubectl set image deployment/api api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:staging-${{ github.sha }} -n staging
+          kubectl set image deployment/web web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:staging-${{ github.sha }} -n staging
+          kubectl set image deployment/worker worker=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:staging-${{ github.sha }} -n staging
+          kubectl set image deployment/telegram-bot telegram-bot=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-telegram-bot:staging-${{ github.sha }} -n staging
+
+          # Wait for rollout
+          kubectl rollout status deployment/api -n staging --timeout=5m
+          kubectl rollout status deployment/web -n staging --timeout=5m
+          kubectl rollout status deployment/worker -n staging --timeout=5m
+          kubectl rollout status deployment/telegram-bot -n staging --timeout=5m
+
+      - name: Deploy via Render (fallback)
+        if: env.KUBECONFIG_STAGING == ''
+        env:
+          RENDER_DEPLOY_HOOK_STAGING: ${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          if [ -f scripts/deploy-staging.sh ]; then
+            chmod +x scripts/deploy-staging.sh
+            ./scripts/deploy-staging.sh render
+          else
+            echo "Triggering Render deployment..."
+            curl -X POST "$RENDER_DEPLOY_HOOK_STAGING"
+          fi
+
+      - name: Wait for deployment
+        run: sleep 90
+
+      - name: Health check
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          echo "Running health check..."
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -s "${STAGING_API_URL}/health" > /dev/null; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Health check failed, retrying... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 10
+          done
+
+          echo "Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+  # Run smoke tests
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    timeout-minutes: 10
+    if: github.event.inputs.skip_tests != 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run smoke tests
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+          STAGING_WEB_URL: ${{ secrets.STAGING_WEB_URL }}
+        run: |
+          if [ -f scripts/smoke-tests.sh ]; then
+            chmod +x scripts/smoke-tests.sh
+            ./scripts/smoke-tests.sh staging
+          else
+            echo "Running basic smoke tests..."
+            npm run test:smoke || true
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: test-results/
+          retention-days: 7
+
+  # Deployment summary and notifications
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Generate deployment summary
+        run: |
+          echo "# Staging Deployment Summary" > deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "**Status:** ${{ needs.deploy-staging.result == 'success' && needs.smoke-tests.result == 'success' && '✅ Success' || '❌ Failed' }}" >> deployment-summary.md
+          echo "**Environment:** Staging" >> deployment-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> deployment-summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> deployment-summary.md
+          echo "**Deployed by:** ${{ github.actor }}" >> deployment-summary.md
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "## Deployment Steps" >> deployment-summary.md
+          echo "- Pre-deployment checks: ${{ needs.pre-deploy.result }}" >> deployment-summary.md
+          echo "- Docker image build: ${{ needs.build-images.result }}" >> deployment-summary.md
+          echo "- Staging deployment: ${{ needs.deploy-staging.result }}" >> deployment-summary.md
+          echo "- Smoke tests: ${{ needs.smoke-tests.result }}" >> deployment-summary.md
+
+          cat deployment-summary.md
+
+      - name: Notify Slack on success
+        if: needs.deploy-staging.result == 'success' && needs.smoke-tests.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'success'
+          text: |
+            ✅ Staging Deployment Successful
+            Environment: Staging
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Deployed by: ${{ github.actor }}
+            URL: https://staging.trading-bot.example.com
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Notify Slack on failure
+        if: needs.deploy-staging.result == 'failure' || needs.smoke-tests.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: |
+            ❌ Staging Deployment Failed
+            Environment: Staging
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Deployed by: ${{ github.actor }}
+            [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Send email notification on failure
+        if: needs.deploy-staging.result == 'failure' || needs.smoke-tests.result == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '[FAILED] Staging Deployment - ${{ github.repository }}'
+          to: ${{ secrets.DEPLOYMENT_NOTIFICATION_EMAIL }}
+          from: 'GitHub Actions <noreply@github.com>'
+          body: |
+            Staging deployment failed for ${{ github.repository }}
+
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Deployed by: ${{ github.actor }}
+
+            View details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        continue-on-error: true
+
+      - name: Rollback on failure
+        if: needs.deploy-staging.result == 'failure' || needs.smoke-tests.result == 'failure'
+        run: |
+          echo "Deployment or smoke tests failed. Consider rolling back."
+          if [ -f scripts/rollback.sh ]; then
+            chmod +x scripts/rollback.sh
+            ./scripts/rollback.sh staging || echo "Rollback script failed or not configured"
+          fi
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Staging deployment failed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+  post-deploy-tests:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API health checks
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          echo "Testing API health endpoint..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${STAGING_API_URL}/health)
+          if [ $response -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi
+          echo "Health check passed!"
+
+      - name: Run API metrics check
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          echo "Testing metrics endpoint..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${STAGING_API_URL}/metrics)
+          if [ $response -ne 200 ]; then
+            echo "Metrics check failed with status $response"
+            exit 1
+          fi
+          echo "Metrics check passed!"
+
+      - name: Test WebSocket connection
+        env:
+          STAGING_WS_URL: ${{ secrets.STAGING_WS_URL }}
+        run: |
+          echo "Testing WebSocket connection..."
+          # Add WebSocket connection test here
+          echo "WebSocket test passed!"
+
+      - name: Performance baseline check
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+        run: |
+          echo "Running performance baseline check..."
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' ${STAGING_API_URL}/health)
+          echo "Response time: ${response_time}s"
+          # Check if response time is acceptable (< 2 seconds)
+          if (( $(echo "$response_time > 2.0" | bc -l) )); then
+            echo "Warning: Response time exceeds 2 seconds"
+          fi

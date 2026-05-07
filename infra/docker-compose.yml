@@ -1,0 +1,76 @@
+services:
+  api:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:api"
+    ports:
+      - "4000:4000"
+    environment:
+      APP_ENV: development
+      APP_MODE: paper
+      SAFE_MODE: "true"
+      PAPER_TRADING_ONLY: "true"
+      FEATURE_REAL_TRADING: "false"
+      API_HOST: 0.0.0.0
+      API_PORT: 4000
+      WEB_ORIGIN: http://localhost:5173
+      API_BASE_URL: http://localhost:4000
+      VITE_API_BASE_URL: http://localhost:4000
+      USE_SIMULATED_MARKET: "true"
+      MARKET_PROVIDER_PRIMARY: binance
+      MARKET_PROVIDER_FALLBACK_1: bybit
+      MARKET_PROVIDER_FALLBACK_2: okx
+      MARKET_PROVIDER_FALLBACK_3: kraken
+      LOG_LEVEL: info
+    volumes:
+      - ..:/app
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:web"
+    ports:
+      - "5173:5173"
+    environment:
+      APP_ENV: development
+      VITE_API_BASE_URL: http://localhost:4000
+    volumes:
+      - ..:/app
+
+  worker:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:worker"
+    environment:
+      APP_ENV: development
+      APP_MODE: paper
+      SAFE_MODE: "true"
+      PAPER_TRADING_ONLY: "true"
+      FEATURE_REAL_TRADING: "false"
+      USE_SIMULATED_MARKET: "true"
+      MARKET_SYMBOLS: BTC-USDT,ETH-USDT
+      API_BASE_URL: http://api:4000
+      LOG_LEVEL: info
+    volumes:
+      - ..:/app
+
+  telegram-bot:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:telegram"
+    depends_on:
+      - api
+    environment:
+      APP_ENV: development
+      SAFE_MODE: "true"
+      PAPER_TRADING_ONLY: "true"
+      FEATURE_REAL_TRADING: "false"
+      API_BASE_URL: http://api:4000
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USER_IDS: ${TELEGRAM_ALLOWED_USER_IDS:-}
+      TELEGRAM_ADMIN_IDS: ${TELEGRAM_ADMIN_IDS:-}
+      TELEGRAM_RATE_LIMIT_MAX: 20
+      TELEGRAM_RATE_LIMIT_WINDOW_MS: 60000
+      LOG_LEVEL: info
+    volumes:
+      - ..:/app

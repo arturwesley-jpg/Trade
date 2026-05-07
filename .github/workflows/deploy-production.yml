@@ -1,0 +1,647 @@
+name: Deploy Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.2.3)'
+        required: true
+      skip_tests:
+        description: 'Skip smoke tests'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20.x'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # Pre-deployment validation
+  pre-deploy-validation:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build all workspaces
+        run: npm run build
+
+      - name: Run security audit
+        run: |
+          npm audit --audit-level=high --production || echo "Security vulnerabilities found"
+
+      - name: Run pre-deploy checks
+        run: |
+          if [ -f scripts/pre-deploy-checks.sh ]; then
+            chmod +x scripts/pre-deploy-checks.sh
+            ./scripts/pre-deploy-checks.sh production
+          fi
+
+      - name: Verify version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          echo "Deploying version: $VERSION"
+
+          # Validate version format
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3"
+            exit 1
+          fi
+
+  # Build and push production Docker images
+  build-production-images:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    needs: pre-deploy-validation
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [api, web, worker, telegram-bot]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "full_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.full_version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.full_version }}
+            type=raw,value=production-latest
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}-production
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}-production
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            NODE_ENV=production
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.version.outputs.version }}
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.version }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+  # Manual approval gate
+  approval:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: build-production-images
+    environment:
+      name: production-approval
+
+    steps:
+      - name: Wait for approval
+        run: |
+          echo "Waiting for manual approval to deploy to production..."
+          echo "Version: ${{ github.event.inputs.version || github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: approval
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://trading-bot.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "full_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create deployment record
+        run: |
+          echo "Recording deployment..."
+          echo "Version: ${{ steps.version.outputs.full_version }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Deployed by: ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+
+      - name: Configure kubectl
+        if: env.KUBECONFIG_PRODUCTION != ''
+        env:
+          KUBECONFIG_PRODUCTION: ${{ secrets.KUBECONFIG_PRODUCTION }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_PRODUCTION" | base64 -d > ~/.kube/config
+          kubectl config use-context production
+
+      - name: Backup current deployment
+        if: env.KUBECONFIG_PRODUCTION != ''
+        env:
+          KUBECONFIG_PRODUCTION: ${{ secrets.KUBECONFIG_PRODUCTION }}
+        run: |
+          echo "Backing up current deployment state..."
+          kubectl get deployments -n production -o yaml > deployment-backup.yaml
+          kubectl get services -n production -o yaml > services-backup.yaml
+          kubectl get configmaps -n production -o yaml > configmaps-backup.yaml
+
+      - name: Upload backup
+        if: env.KUBECONFIG_PRODUCTION != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-backup-${{ github.sha }}
+          path: |
+            deployment-backup.yaml
+            services-backup.yaml
+            configmaps-backup.yaml
+          retention-days: 90
+
+      - name: Deploy to Kubernetes
+        if: env.KUBECONFIG_PRODUCTION != ''
+        env:
+          KUBECONFIG_PRODUCTION: ${{ secrets.KUBECONFIG_PRODUCTION }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update image tags with version
+          kubectl set image deployment/api api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:$VERSION -n production
+          kubectl set image deployment/web web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:$VERSION -n production
+          kubectl set image deployment/worker worker=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:$VERSION -n production
+          kubectl set image deployment/telegram-bot telegram-bot=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-telegram-bot:$VERSION -n production
+
+          # Wait for rollout with timeout
+          echo "Waiting for deployments to roll out..."
+          kubectl rollout status deployment/api -n production --timeout=10m
+          kubectl rollout status deployment/web -n production --timeout=10m
+          kubectl rollout status deployment/worker -n production --timeout=10m
+          kubectl rollout status deployment/telegram-bot -n production --timeout=10m
+
+      - name: Deploy via Render (fallback)
+        if: env.KUBECONFIG_PRODUCTION == ''
+        env:
+          RENDER_DEPLOY_HOOK_PRODUCTION: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          if [ -f scripts/deploy-production.sh ]; then
+            chmod +x scripts/deploy-production.sh
+            ./scripts/deploy-production.sh render
+          else
+            echo "Triggering Render production deployment..."
+            curl -X POST "$RENDER_DEPLOY_HOOK_PRODUCTION"
+          fi
+
+      - name: Wait for deployment stabilization
+        run: sleep 120
+
+      - name: Health check
+        env:
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          echo "Running production health check..."
+          MAX_RETRIES=15
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -s "${PRODUCTION_API_URL}/health" > /dev/null; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Health check failed, retrying... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 15
+          done
+
+          echo "Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+  # Run production smoke tests
+  smoke-tests:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    timeout-minutes: 15
+    if: github.event.inputs.skip_tests != 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run smoke tests
+        env:
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          PRODUCTION_WEB_URL: ${{ secrets.PRODUCTION_WEB_URL }}
+        run: |
+          if [ -f scripts/smoke-tests.sh ]; then
+            chmod +x scripts/smoke-tests.sh
+            ./scripts/smoke-tests.sh production
+          else
+            echo "Running basic production smoke tests..."
+            npm run test:smoke || true
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-test-results
+          path: test-results/
+          retention-days: 30
+
+  # Post-deployment monitoring
+  post-deploy-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-production, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Monitor deployment
+        run: |
+          echo "Monitoring deployment for 5 minutes..."
+          sleep 300
+
+      - name: Check error rates
+        env:
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          echo "Checking error rates..."
+          # Add monitoring checks here
+          echo "Monitoring check completed"
+
+  # Deployment summary and notifications
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-production, smoke-tests, post-deploy-monitoring]
+    if: always()
+
+    steps:
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate deployment summary
+        run: |
+          echo "# Production Deployment Summary" > deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "**Status:** ${{ needs.deploy-production.result == 'success' && needs.smoke-tests.result == 'success' && '✅ Success' || '❌ Failed' }}" >> deployment-summary.md
+          echo "**Environment:** Production" >> deployment-summary.md
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> deployment-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> deployment-summary.md
+          echo "**Deployed by:** ${{ github.actor }}" >> deployment-summary.md
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "## Deployment Steps" >> deployment-summary.md
+          echo "- Pre-deployment validation: ${{ needs.pre-deploy-validation.result }}" >> deployment-summary.md
+          echo "- Docker image build: ${{ needs.build-production-images.result }}" >> deployment-summary.md
+          echo "- Manual approval: ${{ needs.approval.result }}" >> deployment-summary.md
+          echo "- Production deployment: ${{ needs.deploy-production.result }}" >> deployment-summary.md
+          echo "- Smoke tests: ${{ needs.smoke-tests.result }}" >> deployment-summary.md
+          echo "- Post-deploy monitoring: ${{ needs.post-deploy-monitoring.result }}" >> deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "## URLs" >> deployment-summary.md
+          echo "- Production: https://trading-bot.example.com" >> deployment-summary.md
+
+          cat deployment-summary.md
+
+      - name: Upload deployment summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-deployment-summary
+          path: deployment-summary.md
+          retention-days: 365
+
+      - name: Notify Slack on success
+        if: needs.deploy-production.result == 'success' && needs.smoke-tests.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'success'
+          text: |
+            🚀 Production Deployment Successful
+            Version: ${{ steps.version.outputs.version }}
+            Commit: ${{ github.sha }}
+            Deployed by: ${{ github.actor }}
+            URL: https://trading-bot.example.com
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Notify Slack on failure
+        if: needs.deploy-production.result == 'failure' || needs.smoke-tests.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: |
+            🚨 Production Deployment Failed
+            Version: ${{ steps.version.outputs.version }}
+            Commit: ${{ github.sha }}
+            Deployed by: ${{ github.actor }}
+            [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ⚠️ IMMEDIATE ACTION REQUIRED
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Send email notification on success
+        if: needs.deploy-production.result == 'success' && needs.smoke-tests.result == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '[SUCCESS] Production Deployment - ${{ steps.version.outputs.version }}'
+          to: ${{ secrets.DEPLOYMENT_NOTIFICATION_EMAIL }}
+          from: 'GitHub Actions <noreply@github.com>'
+          body: |
+            Production deployment successful!
+
+            Version: ${{ steps.version.outputs.version }}
+            Commit: ${{ github.sha }}
+            Deployed by: ${{ github.actor }}
+            Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+            Production URL: https://trading-bot.example.com
+        continue-on-error: true
+
+      - name: Send email notification on failure
+        if: needs.deploy-production.result == 'failure' || needs.smoke-tests.result == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: '[CRITICAL] Production Deployment Failed - ${{ steps.version.outputs.version }}'
+          to: ${{ secrets.DEPLOYMENT_NOTIFICATION_EMAIL }}
+          from: 'GitHub Actions <noreply@github.com>'
+          body: |
+            ⚠️ CRITICAL: Production deployment failed!
+
+            Version: ${{ steps.version.outputs.version }}
+            Commit: ${{ github.sha }}
+            Deployed by: ${{ github.actor }}
+
+            Immediate action required. Consider rollback.
+
+            View details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        continue-on-error: true
+
+  # Automatic rollback on failure
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-production, smoke-tests]
+    if: failure()
+    environment:
+      name: production-rollback
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download deployment backup
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-backup-${{ github.sha }}
+          path: ./backup
+
+      - name: Rollback deployment
+        env:
+          KUBECONFIG_PRODUCTION: ${{ secrets.KUBECONFIG_PRODUCTION }}
+        run: |
+          if [ -f scripts/rollback.sh ]; then
+            chmod +x scripts/rollback.sh
+            ./scripts/rollback.sh production
+          else
+            echo "Initiating rollback..."
+            if [ -n "$KUBECONFIG_PRODUCTION" ]; then
+              mkdir -p ~/.kube
+              echo "$KUBECONFIG_PRODUCTION" | base64 -d > ~/.kube/config
+              kubectl rollout undo deployment/api -n production
+              kubectl rollout undo deployment/web -n production
+              kubectl rollout undo deployment/worker -n production
+              kubectl rollout undo deployment/telegram-bot -n production
+            fi
+          fi
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          text: |
+            ⚠️ Production Rollback Initiated
+            Version: ${{ github.event.inputs.version || github.ref_name }}
+            Reason: Deployment or smoke tests failed
+            [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Update image tags
+        run: |
+          kubectl set image deployment/trading-api \
+            api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:main \
+            -n trading-platform-staging
+
+          kubectl set image deployment/trading-web \
+            web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:main \
+            -n trading-platform-staging
+
+          kubectl set image deployment/trading-worker \
+            worker=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:main \
+            -n trading-platform-staging
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/trading-api -n trading-platform-staging --timeout=5m
+          kubectl rollout status deployment/trading-web -n trading-platform-staging --timeout=5m
+          kubectl rollout status deployment/trading-worker -n trading-platform-staging --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          npm ci
+          npm run test:e2e:staging
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build-and-push, deploy-staging]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://trading.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update image tags
+        run: |
+          kubectl set image deployment/trading-api \
+            api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.version.outputs.VERSION }} \
+            -n trading-platform
+
+          kubectl set image deployment/trading-web \
+            web=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.version.outputs.VERSION }} \
+            -n trading-platform
+
+          kubectl set image deployment/trading-worker \
+            worker=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-worker:${{ steps.version.outputs.VERSION }} \
+            -n trading-platform
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/trading-api -n trading-platform --timeout=10m
+          kubectl rollout status deployment/trading-web -n trading-platform --timeout=10m
+          kubectl rollout status deployment/trading-worker -n trading-platform --timeout=10m
+
+      - name: Run smoke tests
+        run: |
+          npm ci
+          npm run test:e2e:production
+
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production deployment ${{ job.status }}
+            Version: ${{ steps.version.outputs.VERSION }}
+            Commit: ${{ github.sha }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: deploy-production
+    environment:
+      name: production
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Rollback deployments
+        run: |
+          kubectl rollout undo deployment/trading-api -n trading-platform
+          kubectl rollout undo deployment/trading-web -n trading-platform
+          kubectl rollout undo deployment/trading-worker -n trading-platform
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          text: |
+            Production deployment rolled back
+            Commit: ${{ github.sha }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

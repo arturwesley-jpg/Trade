@@ -1,0 +1,165 @@
+{
+  "dashboard": {
+    "title": "Trading Platform - System Overview",
+    "tags": ["trading", "overview", "system"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Health",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=\"trading-api\"}",
+            "legendFormat": "API Status"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"type": "value", "value": "1", "text": "UP"},
+              {"type": "value", "value": "0", "text": "DOWN"}
+            ],
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total[5m]))",
+            "legendFormat": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"5..\"}[5m]))",
+            "legendFormat": "5xx Errors/sec"
+          },
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"4..\"}[5m]))",
+            "legendFormat": "4xx Errors/sec"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p95 Latency"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "max": 100, "min": 0}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 4},
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "Memory Usage %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "max": 100, "min": 0}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Disk Usage",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 4},
+        "targets": [
+          {
+            "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})) * 100",
+            "legendFormat": "Disk Usage %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "max": 100, "min": 0}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Active Connections",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 10},
+        "targets": [
+          {
+            "expr": "trading_active_connections",
+            "legendFormat": "{{ type }}"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 10},
+        "targets": [
+          {
+            "expr": "trading_database_connections",
+            "legendFormat": "{{ state }}"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Request Duration by Route",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le, route)",
+            "format": "heatmap",
+            "legendFormat": "{{ route }}"
+          }
+        ]
+      }
+    ]
+  }
+}

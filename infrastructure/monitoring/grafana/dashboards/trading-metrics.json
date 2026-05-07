@@ -1,0 +1,291 @@
+{
+  "dashboard": {
+    "title": "Trading Platform - Trading Metrics",
+    "tags": ["trading", "metrics", "business"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Signals Generated",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_signals_generated_total[5m])) by (symbol)",
+            "legendFormat": "{{ symbol }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Signals/sec"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Trades Executed",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_trades_executed_total[5m])) by (symbol, side)",
+            "legendFormat": "{{ symbol }} - {{ side }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Trades/sec"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Open Positions",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(trading_positions_open)",
+            "legendFormat": "Open Positions"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Account Equity",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 6},
+        "targets": [
+          {
+            "expr": "trading_account_equity_usdt",
+            "legendFormat": "Equity (USDT)"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Win Rate",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(trading_trades_total{result=\"win\"}) / sum(trading_trades_total) * 100",
+            "legendFormat": "Win Rate %"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 40, "color": "yellow"},
+                {"value": 60, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Order Fill/Reject Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_orders_filled_total[5m]))",
+            "legendFormat": "Filled"
+          },
+          {
+            "expr": "sum(rate(trading_orders_rejected_total[5m]))",
+            "legendFormat": "Rejected"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Trade P&L Distribution",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 10},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_trade_pnl_usdt_bucket[5m])) by (le)",
+            "legendFormat": "{{ le }}",
+            "format": "heatmap"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "P&L (USDT)"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Cumulative P&L",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10},
+        "targets": [
+          {
+            "expr": "sum(trading_trade_pnl_usdt_sum) by (symbol)",
+            "legendFormat": "{{ symbol }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "Cumulative P&L"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Market Data Latency",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_market_data_latency_seconds_bucket[5m])) by (le, provider))",
+            "legendFormat": "{{ provider }} (p95)"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(trading_market_data_latency_seconds_bucket[5m])) by (le, provider))",
+            "legendFormat": "{{ provider }} (p50)"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Provider Health Score",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "trading_provider_health_score",
+            "legendFormat": "{{ provider }} - {{ symbol }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Health Score", "min": 0, "max": 100}
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Market Ticks Received",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_market_ticks_received_total[1m])) by (symbol, provider)",
+            "legendFormat": "{{ symbol }} - {{ provider }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Ticks/sec"}
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Alerts Active",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_active) by (type, severity)",
+            "legendFormat": "{{ type }} - {{ severity }}"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Signal Confidence Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(trading_signals_generated_total) by (confidence)",
+            "legendFormat": "{{ confidence }}"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Trade Side Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(trading_trades_executed_total) by (side)",
+            "legendFormat": "{{ side }}"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Symbol Performance",
+        "type": "table",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(trading_trades_total) by (symbol, result)",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "symbol": "Symbol",
+                "result": "Result",
+                "Value": "Count"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

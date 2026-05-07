@@ -1,0 +1,131 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chartBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A1F3A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0A0E27;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bullGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00FF88;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#00FF88;stop-opacity:0.2" />
+    </linearGradient>
+    <linearGradient id="bearGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF4757;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FF4757;stop-opacity:0.2" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#chartBg)"/>
+
+  <!-- Grid -->
+  <g opacity="0.1">
+    <line x1="0" y1="100" x2="800" y2="100" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="0" y1="200" x2="800" y2="200" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="0" y1="300" x2="800" y2="300" stroke="#00D4FF" stroke-width="1.5"/>
+    <line x1="0" y1="400" x2="800" y2="400" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="0" y1="500" x2="800" y2="500" stroke="#00D4FF" stroke-width="1"/>
+
+    <line x1="100" y1="50" x2="100" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="200" y1="50" x2="200" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="300" y1="50" x2="300" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="400" y1="50" x2="400" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="500" y1="50" x2="500" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="600" y1="50" x2="600" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    <line x1="700" y1="50" x2="700" y2="550" stroke="#00D4FF" stroke-width="1"/>
+  </g>
+
+  <!-- Candlesticks with realistic pattern -->
+  <g transform="translate(50, 0)">
+    <!-- Candle 1 - Bullish -->
+    <line x1="50" y1="350" x2="50" y2="280" stroke="#00FF88" stroke-width="2"/>
+    <rect x="42" y="300" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 2 - Bearish -->
+    <line x1="100" y1="380" x2="100" y2="310" stroke="#FF4757" stroke-width="2"/>
+    <rect x="92" y="320" width="16" height="60" fill="#FF4757" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 3 - Bullish -->
+    <line x1="150" y1="340" x2="150" y2="270" stroke="#00FF88" stroke-width="2"/>
+    <rect x="142" y="290" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 4 - Bullish -->
+    <line x1="200" y1="310" x2="200" y2="240" stroke="#00FF88" stroke-width="2"/>
+    <rect x="192" y="260" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 5 - Doji -->
+    <line x1="250" y1="280" x2="250" y2="240" stroke="#00D4FF" stroke-width="2"/>
+    <rect x="246" y="258" width="8" height="4" fill="#00D4FF" rx="1" filter="url(#shadow)"/>
+
+    <!-- Candle 6 - Bullish -->
+    <line x1="300" y1="270" x2="300" y2="200" stroke="#00FF88" stroke-width="2"/>
+    <rect x="292" y="220" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 7 - Bullish -->
+    <line x1="350" y1="240" x2="350" y2="170" stroke="#00FF88" stroke-width="2"/>
+    <rect x="342" y="190" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 8 - Bearish -->
+    <line x1="400" y1="250" x2="400" y2="180" stroke="#FF4757" stroke-width="2"/>
+    <rect x="392" y="190" width="16" height="60" fill="#FF4757" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 9 - Bullish -->
+    <line x1="450" y1="220" x2="450" y2="150" stroke="#00FF88" stroke-width="2"/>
+    <rect x="442" y="170" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 10 - Bullish -->
+    <line x1="500" y1="190" x2="500" y2="120" stroke="#00FF88" stroke-width="2"/>
+    <rect x="492" y="140" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 11 - Bullish -->
+    <line x1="550" y1="160" x2="550" y2="90" stroke="#00FF88" stroke-width="2"/>
+    <rect x="542" y="110" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 12 - Bearish correction -->
+    <line x1="600" y1="180" x2="600" y2="110" stroke="#FF4757" stroke-width="2"/>
+    <rect x="592" y="120" width="16" height="60" fill="#FF4757" rx="2" filter="url(#shadow)"/>
+
+    <!-- Candle 13 - Bullish -->
+    <line x1="650" y1="150" x2="650" y2="80" stroke="#00FF88" stroke-width="2"/>
+    <rect x="642" y="100" width="16" height="50" fill="#00FF88" rx="2" filter="url(#shadow)"/>
+  </g>
+
+  <!-- Moving averages -->
+  <path d="M 100 340 Q 200 300, 300 250 T 500 150 T 700 110"
+        stroke="#00D4FF"
+        stroke-width="2"
+        fill="none"
+        opacity="0.6"
+        stroke-dasharray="5,5"/>
+
+  <path d="M 100 360 Q 200 320, 300 270 T 500 170 T 700 130"
+        stroke="#0066FF"
+        stroke-width="2"
+        fill="none"
+        opacity="0.4"
+        stroke-dasharray="5,5"/>
+
+  <!-- Volume bars at bottom -->
+  <g transform="translate(50, 450)" opacity="0.5">
+    <rect x="42" y="0" width="16" height="40" fill="#00FF88"/>
+    <rect x="92" y="10" width="16" height="50" fill="#FF4757"/>
+    <rect x="142" y="5" width="16" height="35" fill="#00FF88"/>
+    <rect x="192" y="0" width="16" height="45" fill="#00FF88"/>
+    <rect x="242" y="15" width="16" height="25" fill="#00D4FF"/>
+    <rect x="292" y="0" width="16" height="60" fill="#00FF88"/>
+    <rect x="342" y="0" width="16" height="70" fill="#00FF88"/>
+    <rect x="392" y="5" width="16" height="55" fill="#FF4757"/>
+    <rect x="442" y="0" width="16" height="65" fill="#00FF88"/>
+    <rect x="492" y="0" width="16" height="75" fill="#00FF88"/>
+    <rect x="542" y="0" width="16" height="80" fill="#00FF88"/>
+    <rect x="592" y="5" width="16" height="60" fill="#FF4757"/>
+    <rect x="642" y="0" width="16" height="70" fill="#00FF88"/>
+  </g>
+
+  <!-- Labels -->
+  <text x="20" y="305" font-family="monospace" font-size="12" fill="#6B7280">50K</text>
+  <text x="20" y="405" font-family="monospace" font-size="12" fill="#6B7280">45K</text>
+  <text x="20" y="505" font-family="monospace" font-size="12" fill="#6B7280">40K</text>
+</svg>

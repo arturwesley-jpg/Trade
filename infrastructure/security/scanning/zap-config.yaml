@@ -1,0 +1,199 @@
+# OWASP ZAP Configuration for Trading Bot
+# Automated security scanning configuration
+
+env:
+  contexts:
+    - name: "Trading Bot API"
+      urls:
+        - "http://localhost:3000/api/.*"
+        - "http://localhost:3000/ws/.*"
+      includePaths:
+        - "http://localhost:3000/api/.*"
+        - "http://localhost:3000/ws/.*"
+      excludePaths:
+        - "http://localhost:3000/api/health"
+        - "http://localhost:3000/api/metrics"
+      authentication:
+        method: "json"
+        loginUrl: "http://localhost:3000/api/auth/login"
+        loginRequestData: '{"email":"test@example.com","password":"TestPassword123!"}'
+        usernameParameter: "email"
+        passwordParameter: "password"
+      sessionManagement:
+        method: "cookie"
+        sessionTokens:
+          - "connect.sid"
+      users:
+        - name: "test-user"
+          credentials:
+            email: "test@example.com"
+            password: "TestPassword123!"
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+  vars:
+    target: "http://localhost:3000"
+    apiKey: "${ZAP_API_KEY}"
+
+jobs:
+  - type: "spider"
+    parameters:
+      context: "Trading Bot API"
+      url: "http://localhost:3000"
+      maxDuration: 10
+      maxDepth: 5
+      maxChildren: 10
+      acceptCookies: true
+      handleODataParametersVisited: false
+      parseComments: true
+      parseGit: false
+      parseRobotsTxt: true
+      parseSVNEntries: false
+      parseSitemapXml: true
+      postForm: true
+      processForm: true
+      requestWaitTime: 200
+
+  - type: "spiderAjax"
+    parameters:
+      context: "Trading Bot API"
+      url: "http://localhost:3000"
+      maxDuration: 10
+      maxCrawlDepth: 5
+      numberOfBrowsers: 1
+      inScopeOnly: true
+      clickDefaultElems: true
+      clickElemsOnce: true
+      randomInputs: true
+
+  - type: "passiveScan-config"
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+
+  - type: "passiveScan-wait"
+    parameters:
+      maxDuration: 10
+
+  - type: "activeScan"
+    parameters:
+      context: "Trading Bot API"
+      url: "http://localhost:3000"
+      maxRuleDurationInMins: 5
+      maxScanDurationInMins: 30
+      addQueryParam: false
+      defaultPolicy: "API-Minimal"
+      delayInMs: 0
+      handleAntiCSRFTokens: true
+      injectPluginIdInHeader: false
+      scanHeadersAllRequests: true
+      threadPerHost: 2
+      policy: "API-Scan"
+
+  - type: "activeScan-wait"
+    parameters:
+      maxDuration: 30
+
+  - type: "report"
+    parameters:
+      template: "traditional-html"
+      reportDir: "/zap/reports"
+      reportFile: "zap-report-{{timestamp}}"
+      reportTitle: "Trading Bot Security Scan"
+      reportDescription: "Automated security scan of Trading Bot API"
+      displayReport: false
+
+  - type: "report"
+    parameters:
+      template: "traditional-json"
+      reportDir: "/zap/reports"
+      reportFile: "zap-report-{{timestamp}}"
+      displayReport: false
+
+# Alert filters
+alertFilters:
+  - ruleId: 10021  # X-Content-Type-Options header missing
+    newRisk: "Info"
+    context: "Trading Bot API"
+    url: "http://localhost:3000/api/.*"
+
+  - ruleId: 10020  # X-Frame-Options header missing
+    newRisk: "Info"
+    context: "Trading Bot API"
+    url: "http://localhost:3000/api/.*"
+
+# Custom scan policy
+scanPolicy:
+  name: "API-Scan"
+  defaultStrength: "MEDIUM"
+  defaultThreshold: "MEDIUM"
+  rules:
+    - id: 40012  # Cross Site Scripting (Reflected)
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 40014  # Cross Site Scripting (Persistent)
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 40018  # SQL Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90019  # Server Side Code Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90020  # Remote OS Command Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 40009  # Server Side Include
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 6     # Path Traversal
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 7     # Remote File Inclusion
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 42    # Source Code Disclosure
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 43    # Source Code Disclosure - File Inclusion
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 20019 # External Redirect
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 30001 # Buffer Overflow
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 30002 # Format String Error
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 90021 # XML External Entity Attack
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90023 # XML Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90024 # Generic Padding Oracle
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 90025 # Expression Language Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90026 # SOAP Action Spoofing
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 90028 # Insecure HTTP Method
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 90029 # LDAP Injection
+      strength: "HIGH"
+      threshold: "LOW"
+    - id: 90030 # CRLF Injection
+      strength: "MEDIUM"
+      threshold: "MEDIUM"
+    - id: 90033 # Loosely Scoped Cookie
+      strength: "LOW"
+      threshold: "MEDIUM"

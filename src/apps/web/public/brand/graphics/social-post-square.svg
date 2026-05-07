@@ -1,0 +1,97 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="postBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0E27;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1F3A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="postAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0066FF;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="postGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#00D4FF;stop-opacity:0" />
+    </radialGradient>
+    <filter id="postShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="url(#postBg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="900" cy="200" r="200" fill="url(#postGlow)"/>
+  <circle cx="200" cy="900" r="150" fill="url(#postGlow)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <path d="M0 0 L1080 0 M0 108 L1080 108 M0 216 L1080 216 M0 324 L1080 324 M0 432 L1080 432 M0 540 L1080 540 M0 648 L1080 648 M0 756 L1080 756 M0 864 L1080 864 M0 972 L1080 972 M0 1080 L1080 1080" stroke="#00D4FF" stroke-width="1"/>
+  </g>
+
+  <!-- Logo -->
+  <g transform="translate(90, 90)">
+    <rect width="120" height="120" rx="20" fill="url(#postAccent)" filter="url(#postShadow)"/>
+    <g transform="translate(20, 30)">
+      <line x1="10" y1="40" x2="10" y2="20" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="6" y="24" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="30" y1="50" x2="30" y2="30" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="26" y="34" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="50" y1="36" x2="50" y2="16" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="46" y="20" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="70" y1="30" x2="70" y2="10" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="66" y="14" width="8" height="16" fill="#0A0E27" rx="1"/>
+    </g>
+    <path d="M 60 80 L 60 95 M 55 85 L 60 80 L 65 85"
+          stroke="#0A0E27"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+  </g>
+
+  <!-- Main headline -->
+  <text x="540" y="380" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle">
+    AI Trading Signals
+  </text>
+  <text x="540" y="440" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle">
+    That Actually Work
+  </text>
+
+  <!-- Subheadline -->
+  <text x="540" y="510" font-family="Arial, sans-serif" font-size="28" fill="#6B7280" text-anchor="middle">
+    Real-time analysis • Automated execution • 24/7 monitoring
+  </text>
+
+  <!-- Stats section -->
+  <g transform="translate(180, 600)">
+    <rect width="240" height="180" rx="20" fill="#1A1F3A" filter="url(#postShadow)"/>
+    <text x="120" y="80" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="#00FF88" text-anchor="middle">98%</text>
+    <text x="120" y="120" font-family="Arial, sans-serif" font-size="20" fill="#6B7280" text-anchor="middle">Signal Accuracy</text>
+  </g>
+
+  <g transform="translate(460, 600)">
+    <rect width="240" height="180" rx="20" fill="#1A1F3A" filter="url(#postShadow)"/>
+    <text x="120" y="80" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="#00D4FF" text-anchor="middle">24/7</text>
+    <text x="120" y="120" font-family="Arial, sans-serif" font-size="20" fill="#6B7280" text-anchor="middle">Market Watch</text>
+  </g>
+
+  <g transform="translate(740, 600)">
+    <rect width="240" height="180" rx="20" fill="#1A1F3A" filter="url(#postShadow)"/>
+    <text x="120" y="80" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="#0066FF" text-anchor="middle">10+</text>
+    <text x="120" y="120" font-family="Arial, sans-serif" font-size="20" fill="#6B7280" text-anchor="middle">Indicators</text>
+  </g>
+
+  <!-- CTA -->
+  <g transform="translate(390, 860)">
+    <rect width="300" height="70" rx="35" fill="url(#postAccent)" filter="url(#postShadow)"/>
+    <text x="150" y="47" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
+      Start Trading Now
+    </text>
+  </g>
+
+  <!-- Footer -->
+  <text x="540" y="990" font-family="Arial, sans-serif" font-size="18" fill="#6B7280" text-anchor="middle">
+    TradeBot • AI-Powered Trading Platform
+  </text>
+</svg>

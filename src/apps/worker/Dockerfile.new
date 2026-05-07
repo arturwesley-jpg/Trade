@@ -1,0 +1,68 @@
+# Multi-stage Dockerfile for Worker service
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Install dependencies for all workspaces
+FROM base AS deps
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/trading-core/package.json ./packages/trading-core/
+COPY packages/exchange/package.json ./packages/exchange/
+COPY apps/worker/package.json ./apps/worker/
+RUN npm install --legacy-peer-deps --production=false
+
+# Build stage
+FROM base AS builder
+COPY package.json package-lock.json ./
+COPY tsconfig.base.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY packages/ ./packages/
+COPY apps/worker/ ./apps/worker/
+
+# Build packages first
+RUN npm run build -w packages/shared -- --force
+RUN npm run build -w packages/trading-core -- --force
+RUN npm run build -w packages/exchange -- --force
+
+# Build Worker
+RUN npm run build -w apps/worker -- --force
+
+# Production dependencies only
+FROM base AS prod-deps
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/trading-core/package.json ./packages/trading-core/
+COPY packages/exchange/package.json ./packages/exchange/
+COPY apps/worker/package.json ./apps/worker/
+RUN npm install --legacy-peer-deps --production=true
+
+# Runner stage
+FROM base AS runner
+ENV NODE_ENV=production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 workeruser
+
+# Copy production dependencies
+COPY --from=prod-deps --chown=workeruser:nodejs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=workeruser:nodejs /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=prod-deps --chown=workeruser:nodejs /app/packages/trading-core/node_modules ./packages/trading-core/node_modules
+COPY --from=prod-deps --chown=workeruser:nodejs /app/packages/exchange/node_modules ./packages/exchange/node_modules
+COPY --from=prod-deps --chown=workeruser:nodejs /app/apps/worker/node_modules ./apps/worker/node_modules
+
+# Copy built application
+COPY --from=builder --chown=workeruser:nodejs /app/apps/worker/dist ./apps/worker/dist
+COPY --from=builder --chown=workeruser:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=workeruser:nodejs /app/packages/trading-core/dist ./packages/trading-core/dist
+COPY --from=builder --chown=workeruser:nodejs /app/packages/exchange/dist ./packages/exchange/dist
+
+# Copy package.json files for module resolution
+COPY --chown=workeruser:nodejs package.json ./
+COPY --chown=workeruser:nodejs packages/shared/package.json ./packages/shared/
+COPY --chown=workeruser:nodejs packages/trading-core/package.json ./packages/trading-core/
+COPY --chown=workeruser:nodejs packages/exchange/package.json ./packages/exchange/
+COPY --chown=workeruser:nodejs apps/worker/package.json ./apps/worker/
+
+USER workeruser
+
+CMD ["node", "apps/worker/dist/index.js"]

@@ -1,0 +1,228 @@
+{
+  "dashboard": {
+    "title": "Trading Platform - Alert Monitoring",
+    "tags": ["trading", "alerts", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_active)",
+            "legendFormat": "Active Alerts"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Alerts Triggered (Last Hour)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(trading_alerts_triggered_total[1h]))",
+            "legendFormat": "Triggered"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Alerts Resolved (Last Hour)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(increase(trading_alerts_resolved_total[1h]))",
+            "legendFormat": "Resolved"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Alert Resolution Time",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(rate(trading_alerts_resolved_total[5m]) / rate(trading_alerts_triggered_total[5m])) * 100",
+            "legendFormat": "Resolution Rate %"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Alerts by Type",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_active) by (type)",
+            "legendFormat": "{{ type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Active Alerts"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Alerts by Severity",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_active) by (severity)",
+            "legendFormat": "{{ severity }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Active Alerts"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Alert Trigger Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_alerts_triggered_total[5m])) by (type)",
+            "legendFormat": "{{ type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Alerts/sec"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Alert Resolution Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_alerts_resolved_total[5m])) by (type)",
+            "legendFormat": "{{ type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Resolutions/sec"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Alert Type Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_triggered_total) by (type)",
+            "legendFormat": "{{ type }}"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Alert Severity Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(trading_alerts_triggered_total) by (severity)",
+            "legendFormat": "{{ severity }}"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Top Alert Types",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 20},
+        "targets": [
+          {
+            "expr": "topk(10, sum(trading_alerts_triggered_total) by (type, severity))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "type": "Alert Type",
+                "severity": "Severity",
+                "Value": "Count"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Alert Timeline",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_alerts_triggered_total[1m])) by (type, severity)",
+            "legendFormat": "{{ type }} - {{ severity }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Alerts/sec"}
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@trade/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "start": "node dist/worker.js",
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@trade/exchange": "file:../../packages/exchange",
+    "@trade/shared": "file:../../packages/shared",
+    "@trade/trading-core": "file:../../packages/trading-core"
+  }
+}

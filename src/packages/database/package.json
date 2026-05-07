@@ -1,0 +1,22 @@
+{
+  "name": "@trading-bot/database",
+  "version": "1.0.0",
+  "description": "Database layer for Trading Bot",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "migrate:up": "node dist/migrations/runner.js up",
+    "migrate:down": "node dist/migrations/runner.js down",
+    "migrate:create": "node dist/migrations/runner.js create"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "pg-pool": "^3.6.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9",
+    "typescript": "^5.3.3"
+  }
+}

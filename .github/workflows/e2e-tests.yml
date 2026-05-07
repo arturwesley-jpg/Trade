@@ -1,0 +1,286 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      test_pattern:
+        description: 'Test pattern to run (e.g., api, integration, performance)'
+        required: false
+        default: '**/*.e2e.test.ts'
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-tests:
+    name: E2E Tests (Shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+        total-shards: [3]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup test infrastructure
+        run: npm run test:e2e:setup
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to be ready..."
+          timeout=60
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if docker compose -f tests/e2e/docker-compose.test.yml ps | grep -q "healthy"; then
+              echo "Services are healthy!"
+              docker compose -f tests/e2e/docker-compose.test.yml ps
+              exit 0
+            fi
+            echo "Waiting for services... ($elapsed/$timeout seconds)"
+            sleep 5
+            elapsed=$((elapsed + 5))
+          done
+          echo "Services failed to become healthy in time"
+          docker compose -f tests/e2e/docker-compose.test.yml ps
+          docker compose -f tests/e2e/docker-compose.test.yml logs
+          exit 1
+
+      - name: Run E2E tests with coverage (Shard ${{ matrix.shard }}/${{ matrix.total-shards }})
+        run: npm run test:e2e:ci -- --shard=${{ matrix.shard }}/${{ matrix.total-shards }} --reporter=verbose --reporter=json --outputFile=test-results-${{ matrix.shard }}.json
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/trade_test_db
+          REDIS_URL: redis://localhost:6380
+          BINGX_WS_URL: ws://localhost:8080/swap-market
+          CI: true
+        continue-on-error: false
+
+      - name: Retry failed tests
+        if: failure()
+        run: |
+          echo "Retrying failed tests..."
+          npm run test:e2e:ci -- --shard=${{ matrix.shard }}/${{ matrix.total-shards }} --retry=2 --reporter=verbose
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5433/trade_test_db
+          REDIS_URL: redis://localhost:6380
+          BINGX_WS_URL: ws://localhost:8080/swap-market
+          CI: true
+
+      - name: Generate HTML report
+        if: always()
+        run: |
+          npx vitest --reporter=html --config=tests/e2e/vitest.config.e2e.ts || true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: e2e-shard-${{ matrix.shard }}
+          name: e2e-coverage-shard-${{ matrix.shard }}
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results-shard-${{ matrix.shard }}
+          path: |
+            coverage/
+            html/
+            test-results-${{ matrix.shard }}.json
+            tests/e2e/*.log
+          retention-days: 30
+
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots-shard-${{ matrix.shard }}
+          path: |
+            tests/e2e/screenshots/
+            tests/e2e/videos/
+          retention-days: 7
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Docker Compose Services ==="
+          docker compose -f tests/e2e/docker-compose.test.yml ps
+          echo ""
+          echo "=== PostgreSQL Logs ==="
+          docker compose -f tests/e2e/docker-compose.test.yml logs postgres-test
+          echo ""
+          echo "=== Redis Logs ==="
+          docker compose -f tests/e2e/docker-compose.test.yml logs redis-test
+          echo ""
+          echo "=== Mock BingX WS Logs ==="
+          docker compose -f tests/e2e/docker-compose.test.yml logs mock-bingx-ws
+
+      - name: Teardown test infrastructure
+        if: always()
+        run: npm run test:e2e:teardown
+
+  merge-reports:
+    name: Merge Test Reports
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: e2e-test-results-shard-*
+          path: test-results
+          merge-multiple: true
+
+      - name: Merge coverage reports
+        run: |
+          mkdir -p merged-coverage
+          if [ -d "test-results/coverage" ]; then
+            cp -r test-results/coverage/* merged-coverage/ || true
+          fi
+
+      - name: Generate combined HTML report
+        run: |
+          echo "# E2E Test Results" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Test Execution Summary" >> test-summary.md
+          echo "- Workflow: ${{ github.workflow }}" >> test-summary.md
+          echo "- Run ID: ${{ github.run_id }}" >> test-summary.md
+          echo "- Commit: ${{ github.sha }}" >> test-summary.md
+          echo "- Branch: ${{ github.ref_name }}" >> test-summary.md
+          echo "" >> test-summary.md
+
+          if [ -f "test-results/test-results-1.json" ]; then
+            echo "## Shard Results" >> test-summary.md
+            for shard in 1 2 3; do
+              if [ -f "test-results/test-results-$shard.json" ]; then
+                echo "### Shard $shard" >> test-summary.md
+                cat test-results/test-results-$shard.json | head -20 >> test-summary.md || true
+                echo "" >> test-summary.md
+              fi
+            done
+          fi
+
+      - name: Upload merged results
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-merged-results
+          path: |
+            merged-coverage/
+            test-summary.md
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let summary = '## E2E Test Results\n\n';
+
+            try {
+              if (fs.existsSync('test-summary.md')) {
+                summary += fs.readFileSync('test-summary.md', 'utf8');
+              } else {
+                summary += 'Test results not available.\n';
+              }
+            } catch (error) {
+              summary += `Error reading test results: ${error.message}\n`;
+            }
+
+            summary += '\n\n[View full results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Type check
+        run: npm run typecheck
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [e2e-tests, unit-tests, merge-reports]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.e2e-tests.result }}" != "success" ]]; then
+            echo "E2E tests failed or were cancelled"
+            exit 1
+          fi
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
+            echo "Unit tests failed or were cancelled"
+            exit 1
+          fi
+          echo "All tests passed successfully!"

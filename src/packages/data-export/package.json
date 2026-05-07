@@ -1,0 +1,32 @@
+{
+  "name": "@trading-bot/data-export",
+  "version": "1.0.0",
+  "description": "Data export functionality with multiple formats and GDPR compliance",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trading-bot/database": "file:../database",
+    "@trade/shared": "file:../shared",
+    "csv-writer": "^1.6.0",
+    "exceljs": "^4.4.0",
+    "pdfkit": "^0.15.0",
+    "archiver": "^7.0.1",
+    "aws-sdk": "^2.1691.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/pdfkit": "^0.13.5",
+    "@types/archiver": "^6.0.2",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.16",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

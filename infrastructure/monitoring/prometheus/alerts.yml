@@ -1,0 +1,416 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(trading_http_requests_total{status_code=~"5.."}[5m]))
+            /
+            sum(rate(trading_http_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # API Latency High
+      - alert: HighAPILatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency on {{ $labels.route }}"
+          description: "95th percentile latency is {{ $value }}s (threshold: 2s)"
+
+      # API Latency Critical
+      - alert: CriticalAPILatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical API latency on {{ $labels.route }}"
+          description: "95th percentile latency is {{ $value }}s (threshold: 5s)"
+
+      # High Request Rate
+      - alert: HighRequestRate
+        expr: sum(rate(trading_http_requests_total[1m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High request rate detected"
+          description: "Request rate is {{ $value }} req/s (threshold: 1000 req/s)"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Database Connection Issues
+      - alert: DatabaseConnectionDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection is down"
+          description: "PostgreSQL is unreachable for {{ $labels.instance }}"
+
+      # High Database Connection Usage
+      - alert: HighDatabaseConnections
+        expr: |
+          (
+            trading_database_connections{state="active"}
+            /
+            trading_database_connections{state="max"}
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connection usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      # Slow Database Queries
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_operation_duration_seconds_bucket{operation=~"db_.*"}[5m])) by (le, operation)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time for {{ $labels.operation }} is {{ $value }}s"
+
+  - name: redis_alerts
+    interval: 30s
+    rules:
+      # Redis Connection Down
+      - alert: RedisConnectionDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis connection is down"
+          description: "Redis is unreachable for {{ $labels.instance }}"
+
+      # High Redis Memory Usage
+      - alert: HighRedisMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+
+      # Redis Cache Hit Rate Low
+      - alert: LowRedisCacheHitRate
+        expr: |
+          (
+            sum(rate(trading_cache_hits_total[5m]))
+            /
+            (sum(rate(trading_cache_hits_total[5m])) + sum(rate(trading_cache_misses_total[5m])))
+          ) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Low Redis cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 70%)"
+
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # Critical CPU Usage
+      - alert: CriticalCPUUsage
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% (threshold: 95%)"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 85%)"
+
+      # Critical Memory Usage
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 95%)"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Available disk space is {{ $value | humanizePercentage }} (threshold: 15%)"
+
+      # Disk Space Critical
+      - alert: DiskSpaceCritical
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Available disk space is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+  - name: trading_alerts
+    interval: 30s
+    rules:
+      # Signal Generation Failure
+      - alert: SignalGenerationFailure
+        expr: rate(trading_signals_generated_total[5m]) == 0
+        for: 10m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "Signal generation has stopped"
+          description: "No trading signals generated in the last 10 minutes"
+
+      # High Order Rejection Rate
+      - alert: HighOrderRejectionRate
+        expr: |
+          (
+            sum(rate(trading_orders_rejected_total[5m]))
+            /
+            (sum(rate(trading_orders_filled_total[5m])) + sum(rate(trading_orders_rejected_total[5m])))
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "High order rejection rate"
+          description: "Order rejection rate is {{ $value | humanizePercentage }} (threshold: 20%)"
+
+      # Market Data Latency High
+      - alert: HighMarketDataLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_market_data_latency_seconds_bucket[5m])) by (le, provider)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "High market data latency from {{ $labels.provider }}"
+          description: "95th percentile latency is {{ $value }}s (threshold: 1s)"
+
+      # Provider Health Score Low
+      - alert: LowProviderHealthScore
+        expr: trading_provider_health_score < 50
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "Low health score for {{ $labels.provider }}"
+          description: "Provider health score is {{ $value }} (threshold: 50)"
+
+      # No Market Ticks Received
+      - alert: NoMarketTicksReceived
+        expr: rate(trading_market_ticks_received_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "No market ticks received"
+          description: "No market data received in the last 5 minutes"
+
+      # High Trading Losses
+      - alert: HighTradingLosses
+        expr: |
+          sum(rate(trading_trade_pnl_usdt_sum[1h])) < -500
+        for: 30m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "High trading losses detected"
+          description: "Cumulative losses in the last hour: ${{ $value }}"
+
+      # Too Many Open Positions
+      - alert: TooManyOpenPositions
+        expr: sum(trading_positions_open) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "Too many open positions"
+          description: "Currently {{ $value }} open positions (threshold: 10)"
+
+  - name: external_api_alerts
+    interval: 30s
+    rules:
+      # External API High Error Rate
+      - alert: ExternalAPIHighErrorRate
+        expr: |
+          (
+            sum(rate(trading_external_api_calls_total{status="error"}[5m])) by (provider)
+            /
+            sum(rate(trading_external_api_calls_total[5m])) by (provider)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: external_api
+        annotations:
+          summary: "High error rate for {{ $labels.provider }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # External API Timeout
+      - alert: ExternalAPITimeout
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_external_api_duration_seconds_bucket[5m])) by (le, provider)
+          ) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: external_api
+        annotations:
+          summary: "High timeout rate for {{ $labels.provider }}"
+          description: "95th percentile duration is {{ $value }}s (threshold: 10s)"
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # Application Down
+      - alert: ApplicationDown
+        expr: up{job="trading-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Application is down"
+          description: "Trading API is unreachable for {{ $labels.instance }}"
+
+      # High Error Count
+      - alert: HighErrorCount
+        expr: sum(rate(trading_errors_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High error count"
+          description: "Error rate is {{ $value }} errors/s (threshold: 10 errors/s)"
+
+      # WebSocket Connection Issues
+      - alert: WebSocketConnectionIssues
+        expr: rate(trading_ws_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket error rate"
+          description: "WebSocket error rate is {{ $value }} errors/s (threshold: 5 errors/s)"
+
+      # Queue Size Growing
+      - alert: QueueSizeGrowing
+        expr: |
+          deriv(trading_queue_size[10m]) > 0
+          and
+          trading_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Queue {{ $labels.queue_name }} is growing"
+          description: "Queue size is {{ $value }} and increasing (threshold: 100)"
+
+      # Slow Queue Processing
+      - alert: SlowQueueProcessing
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(trading_queue_processing_time_seconds_bucket[5m])) by (le, queue_name)
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "Slow processing for queue {{ $labels.queue_name }}"
+          description: "95th percentile processing time is {{ $value }}s (threshold: 5s)"

@@ -1,0 +1,233 @@
+# CloudFlare CDN Configuration for Trading Bot
+# Apply via CloudFlare API or Dashboard
+
+# Cache Rules
+cache_rules:
+  - name: "Static Assets - Long Cache"
+    match:
+      - "*.js"
+      - "*.css"
+      - "*.woff2"
+      - "*.woff"
+      - "*.ttf"
+      - "*.eot"
+      - "*.svg"
+      - "*.png"
+      - "*.jpg"
+      - "*.jpeg"
+      - "*.gif"
+      - "*.webp"
+      - "*.ico"
+    cache_level: "cache_everything"
+    edge_cache_ttl: 31536000  # 1 year
+    browser_cache_ttl: 31536000
+    cache_key:
+      query_string: "ignore"
+
+  - name: "API Responses - Short Cache"
+    match:
+      - "/api/market/*"
+      - "/api/stats/*"
+    cache_level: "cache_everything"
+    edge_cache_ttl: 60  # 1 minute
+    browser_cache_ttl: 30
+    cache_key:
+      query_string: "all"
+
+  - name: "No Cache - Dynamic Content"
+    match:
+      - "/api/auth/*"
+      - "/api/user/*"
+      - "/api/trades/*"
+      - "/api/positions/*"
+      - "/api/orders/*"
+    cache_level: "bypass"
+
+# Page Rules
+page_rules:
+  - url: "*.trade-bot.com/*"
+    settings:
+      ssl: "full_strict"
+      always_use_https: true
+      automatic_https_rewrites: true
+
+  - url: "*.trade-bot.com/static/*"
+    settings:
+      cache_level: "cache_everything"
+      edge_cache_ttl: 31536000
+      browser_cache_ttl: 31536000
+
+  - url: "api.trade-bot.com/*"
+    settings:
+      cache_level: "bypass"
+      security_level: "high"
+      waf: true
+
+# Security Settings
+security:
+  ssl_mode: "full_strict"
+  min_tls_version: "1.2"
+  tls_1_3: "on"
+  automatic_https_rewrites: true
+  always_use_https: true
+  opportunistic_encryption: true
+
+  # WAF
+  waf:
+    enabled: true
+    mode: "block"
+    sensitivity: "medium"
+
+  # DDoS Protection
+  ddos_protection:
+    enabled: true
+    sensitivity: "high"
+
+  # Rate Limiting
+  rate_limiting:
+    - name: "API Rate Limit"
+      match:
+        request.uri.path: "/api/*"
+      threshold: 100
+      period: 60
+      action: "challenge"
+
+    - name: "Auth Rate Limit"
+      match:
+        request.uri.path: "/api/auth/*"
+      threshold: 10
+      period: 60
+      action: "block"
+
+# Performance Settings
+performance:
+  # Minification
+  minify:
+    html: true
+    css: true
+    js: true
+
+  # Brotli Compression
+  brotli: true
+
+  # HTTP/2
+  http2: true
+
+  # HTTP/3 (QUIC)
+  http3: true
+
+  # Early Hints
+  early_hints: true
+
+  # Rocket Loader (defer JS)
+  rocket_loader: false  # Disabled for trading app (real-time requirements)
+
+  # Auto Minify
+  auto_minify:
+    html: true
+    css: true
+    js: true
+
+  # Polish (Image Optimization)
+  polish: "lossless"
+  webp: true
+
+  # Mirage (Lazy Loading)
+  mirage: true
+
+  # Argo Smart Routing
+  argo: true
+
+# Firewall Rules
+firewall_rules:
+  - name: "Block Bad Bots"
+    expression: "(cf.client.bot) and not (cf.verified_bot_category in {\"Search Engine Crawler\" \"Monitoring & Analytics\"})"
+    action: "block"
+
+  - name: "Block Suspicious Countries"
+    expression: "(ip.geoip.country in {\"CN\" \"RU\" \"KP\"})"
+    action: "challenge"
+
+  - name: "Rate Limit API"
+    expression: "(http.request.uri.path matches \"^/api/\")"
+    action: "rate_limit"
+    rate_limit:
+      requests_per_period: 100
+      period: 60
+
+  - name: "Protect Admin"
+    expression: "(http.request.uri.path matches \"^/admin/\")"
+    action: "js_challenge"
+
+# Workers (Edge Computing)
+workers:
+  - name: "cache-api-worker"
+    route: "api.trade-bot.com/api/market/*"
+    script: |
+      addEventListener('fetch', event => {
+        event.respondWith(handleRequest(event.request))
+      })
+
+      async function handleRequest(request) {
+        const cache = caches.default
+        const cacheKey = new Request(request.url, request)
+
+        // Try cache first
+        let response = await cache.match(cacheKey)
+
+        if (!response) {
+          // Fetch from origin
+          response = await fetch(request)
+
+          // Cache successful responses
+          if (response.ok) {
+            response = new Response(response.body, response)
+            response.headers.set('Cache-Control', 'public, max-age=60')
+            event.waitUntil(cache.put(cacheKey, response.clone()))
+          }
+        }
+
+        return response
+      }
+
+# Load Balancing
+load_balancing:
+  pools:
+    - name: "primary-pool"
+      origins:
+        - name: "origin-1"
+          address: "origin1.trade-bot.com"
+          weight: 1
+          enabled: true
+        - name: "origin-2"
+          address: "origin2.trade-bot.com"
+          weight: 1
+          enabled: true
+      monitor: "/health"
+      notification_email: "ops@trade-bot.com"
+
+  geo_steering:
+    - region: "NA"
+      pool: "primary-pool"
+    - region: "EU"
+      pool: "primary-pool"
+    - region: "ASIA"
+      pool: "primary-pool"
+
+# Analytics
+analytics:
+  web_analytics: true
+
+# Logs
+logs:
+  logpush:
+    enabled: true
+    destination: "s3://trade-bot-logs/cloudflare/"
+    fields:
+      - "ClientIP"
+      - "ClientRequestHost"
+      - "ClientRequestMethod"
+      - "ClientRequestURI"
+      - "EdgeResponseStatus"
+      - "EdgeResponseBytes"
+      - "RayID"

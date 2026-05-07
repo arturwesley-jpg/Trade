@@ -1,0 +1,164 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.trading-bot.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Render (Staging)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
+        run: |
+          curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+
+      - name: Wait for deployment
+        run: sleep 60
+
+      - name: Health check
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://staging.trading-bot.example.com/health)
+          if [ $response -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi
+
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: 'Staging deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://trading-bot.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: npm run db:migrate
+
+      - name: Deploy to Render (Production)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_PROD_SERVICE_ID }}
+        run: |
+          curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+
+      - name: Wait for deployment
+        run: sleep 90
+
+      - name: Health check
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://trading-bot.example.com/health)
+          if [ $response -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi
+
+      - name: Smoke tests
+        run: |
+          # Test critical endpoints
+          curl -f https://trading-bot.example.com/api/health || exit 1
+          curl -f https://trading-bot.example.com/api/market/ticker/BTC-USDT || exit 1
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ job.status }} - ${{ github.ref }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [deploy-production]
+    
+    steps:
+      - name: Rollback deployment
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_PROD_SERVICE_ID }}
+        run: |
+          # Get previous deployment
+          previous_deploy=$(curl -s "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys?limit=2" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" | jq -r '.[1].id')
+          
+          # Trigger rollback
+          curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/${previous_deploy}/rollback" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}"
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          text: 'Production deployment rolled back'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

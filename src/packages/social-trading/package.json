@@ -1,0 +1,42 @@
+{
+  "name": "@trade/social-trading",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./copy-trading": {
+      "types": "./dist/copy-trading/index.d.ts",
+      "import": "./dist/copy-trading/index.js"
+    },
+    "./leaderboard": {
+      "types": "./dist/leaderboard/index.d.ts",
+      "import": "./dist/leaderboard/index.js"
+    },
+    "./trade-sharing": {
+      "types": "./dist/trade-sharing/index.d.ts",
+      "import": "./dist/trade-sharing/index.js"
+    },
+    "./chat": {
+      "types": "./dist/chat/index.d.ts",
+      "import": "./dist/chat/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trade/shared": "file:../shared",
+    "@trade/trading-core": "file:../trading-core"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.5"
+  }
+}

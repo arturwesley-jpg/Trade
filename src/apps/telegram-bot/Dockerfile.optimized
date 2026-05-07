@@ -1,0 +1,67 @@
+# Multi-stage optimized Dockerfile for Telegram Bot service
+# Features: layer caching, security hardening, minimal image size
+
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache \
+    libc6-compat \
+    dumb-init \
+    && apk upgrade --no-cache
+
+# Dependencies stage - only production deps
+FROM base AS deps
+COPY package*.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/telegram-bot/package.json ./apps/telegram-bot/
+
+# Install dependencies with cache mount for faster builds
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production --prefer-offline --no-audit
+
+# Builder stage - compile TypeScript
+FROM base AS builder
+COPY package*.json ./
+COPY tsconfig.base.json ./
+COPY packages/ ./packages/
+COPY apps/telegram-bot/ ./apps/telegram-bot/
+
+# Install all dependencies including devDependencies
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit
+
+# Build packages in dependency order
+RUN npm run build -w packages/shared -- --force && \
+    npm run build -w apps/telegram-bot -- --force
+
+# Prune dev dependencies
+RUN npm prune --production
+
+# Runner stage - minimal production image
+FROM base AS runner
+ENV NODE_ENV=production \
+    NODE_OPTIONS="--max-old-space-size=512"
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 botuser
+
+# Copy only necessary files
+COPY --from=deps --chown=botuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=botuser:nodejs /app/apps/telegram-bot/dist ./apps/telegram-bot/dist
+COPY --from=builder --chown=botuser:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=botuser:nodejs /app/package*.json ./
+
+USER botuser
+
+# Health check via process check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD pgrep -f "node.*telegram-bot" || exit 1
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "apps/telegram-bot/dist/index.js"]
+
+# Labels for metadata
+LABEL org.opencontainers.image.title="Trading Bot Telegram" \
+      org.opencontainers.image.description="Telegram bot interface for trading operations" \
+      org.opencontainers.image.vendor="Trading Bot"

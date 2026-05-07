@@ -1,0 +1,7 @@
+# Staging Variables
+
+region = "us-east-1"
+
+# IMPORTANT: Set these values before applying
+# alarm_email      = "your-email@example.com"
+# certificate_arn  = "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"

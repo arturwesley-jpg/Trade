@@ -1,0 +1,152 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="storyBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0E27;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1A1F3A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0A0E27;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="storyAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0066FF;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="storyGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#00D4FF;stop-opacity:0" />
+    </radialGradient>
+    <filter id="storyShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="1920" fill="url(#storyBg)"/>
+
+  <!-- Decorative elements -->
+  <circle cx="540" cy="400" r="300" fill="url(#storyGlow)"/>
+  <circle cx="200" cy="1200" r="200" fill="url(#storyGlow)" opacity="0.5"/>
+  <circle cx="880" cy="1600" r="200" fill="url(#storyGlow)" opacity="0.5"/>
+
+  <!-- Logo at top -->
+  <g transform="translate(480, 120)">
+    <rect width="120" height="120" rx="20" fill="url(#storyAccent)" filter="url(#storyShadow)"/>
+    <g transform="translate(20, 30)">
+      <line x1="10" y1="40" x2="10" y2="20" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="6" y="24" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="30" y1="50" x2="30" y2="30" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="26" y="34" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="50" y1="36" x2="50" y2="16" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="46" y="20" width="8" height="16" fill="#0A0E27" rx="1"/>
+      <line x1="70" y1="30" x2="70" y2="10" stroke="#0A0E27" stroke-width="4"/>
+      <rect x="66" y="14" width="8" height="16" fill="#0A0E27" rx="1"/>
+    </g>
+    <path d="M 60 80 L 60 95 M 55 85 L 60 80 L 65 85"
+          stroke="#0A0E27"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+  </g>
+
+  <!-- Brand name -->
+  <text x="540" y="310" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">
+    TRADEBOT
+  </text>
+
+  <!-- Main content area -->
+  <g transform="translate(90, 400)">
+    <!-- Chart visualization -->
+    <rect width="900" height="600" rx="30" fill="#1A1F3A" filter="url(#storyShadow)"/>
+
+    <!-- Mini grid -->
+    <g opacity="0.1">
+      <line x1="30" y1="50" x2="870" y2="50" stroke="#00D4FF" stroke-width="1"/>
+      <line x1="30" y1="150" x2="870" y2="150" stroke="#00D4FF" stroke-width="1"/>
+      <line x1="30" y1="250" x2="870" y2="250" stroke="#00D4FF" stroke-width="1"/>
+      <line x1="30" y1="350" x2="870" y2="350" stroke="#00D4FF" stroke-width="1"/>
+      <line x1="30" y1="450" x2="870" y2="450" stroke="#00D4FF" stroke-width="1"/>
+      <line x1="30" y1="550" x2="870" y2="550" stroke="#00D4FF" stroke-width="1"/>
+    </g>
+
+    <!-- Candlesticks -->
+    <g transform="translate(100, 100)">
+      <line x1="50" y1="300" x2="50" y2="250" stroke="#00FF88" stroke-width="3"/>
+      <rect x="42" y="260" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="120" y1="320" x2="120" y2="270" stroke="#FF4757" stroke-width="3"/>
+      <rect x="112" y="280" width="16" height="40" fill="#FF4757" rx="2"/>
+
+      <line x1="190" y1="280" x2="190" y2="230" stroke="#00FF88" stroke-width="3"/>
+      <rect x="182" y="240" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="260" y1="260" x2="260" y2="210" stroke="#00FF88" stroke-width="3"/>
+      <rect x="252" y="220" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="330" y1="240" x2="330" y2="190" stroke="#00FF88" stroke-width="3"/>
+      <rect x="322" y="200" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="400" y1="220" x2="400" y2="170" stroke="#00FF88" stroke-width="3"/>
+      <rect x="392" y="180" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="470" y1="200" x2="470" y2="150" stroke="#00FF88" stroke-width="3"/>
+      <rect x="462" y="160" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="540" y1="180" x2="540" y2="130" stroke="#00FF88" stroke-width="3"/>
+      <rect x="532" y="140" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="610" y1="160" x2="610" y2="110" stroke="#00FF88" stroke-width="3"/>
+      <rect x="602" y="120" width="16" height="40" fill="#00FF88" rx="2"/>
+
+      <line x1="680" y1="140" x2="680" y2="90" stroke="#00FF88" stroke-width="3"/>
+      <rect x="672" y="100" width="16" height="40" fill="#00FF88" rx="2"/>
+    </g>
+
+    <!-- Trend line -->
+    <path d="M 150 350 Q 350 300, 550 250 T 750 150"
+          stroke="url(#storyAccent)"
+          stroke-width="4"
+          fill="none"
+          stroke-dasharray="8,8"/>
+
+    <!-- Signal indicator -->
+    <g transform="translate(750, 180)">
+      <circle cx="0" cy="0" r="30" fill="#00FF88" opacity="0.3"/>
+      <circle cx="0" cy="0" r="20" fill="#00FF88"/>
+      <path d="M -5 0 L 0 -8 L 5 0 L 0 8 Z" fill="#0A0E27"/>
+    </g>
+  </g>
+
+  <!-- Stats -->
+  <g transform="translate(140, 1100)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#00FF88">+127%</text>
+    <text x="0" y="50" font-family="Arial, sans-serif" font-size="28" fill="#6B7280">Monthly Returns</text>
+  </g>
+
+  <g transform="translate(140, 1250)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#00D4FF">98.5%</text>
+    <text x="0" y="50" font-family="Arial, sans-serif" font-size="28" fill="#6B7280">Signal Accuracy</text>
+  </g>
+
+  <g transform="translate(140, 1400)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#0066FF">24/7</text>
+    <text x="0" y="50" font-family="Arial, sans-serif" font-size="28" fill="#6B7280">Automated Trading</text>
+  </g>
+
+  <!-- CTA -->
+  <g transform="translate(190, 1600)">
+    <rect width="700" height="100" rx="50" fill="url(#storyAccent)" filter="url(#storyShadow)"/>
+    <text x="350" y="67" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">
+      Start Trading Today
+    </text>
+  </g>
+
+  <!-- Footer -->
+  <text x="540" y="1800" font-family="Arial, sans-serif" font-size="24" fill="#6B7280" text-anchor="middle">
+    Swipe up to learn more
+  </text>
+  <path d="M 520 1830 L 540 1850 L 560 1830"
+        stroke="#6B7280"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+</svg>

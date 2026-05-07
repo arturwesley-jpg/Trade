@@ -1,0 +1,56 @@
+# Multi-stage Dockerfile for Telegram Bot service
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Install dependencies for all workspaces
+FROM base AS deps
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/telegram-bot/package.json ./apps/telegram-bot/
+RUN npm install --legacy-peer-deps --production=false
+
+# Build stage
+FROM base AS builder
+COPY package.json package-lock.json ./
+COPY tsconfig.base.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY packages/ ./packages/
+COPY apps/telegram-bot/ ./apps/telegram-bot/
+
+# Build packages first
+RUN npm run build -w packages/shared -- --force
+
+# Build Telegram Bot
+RUN npm run build -w apps/telegram-bot -- --force
+
+# Production dependencies only
+FROM base AS prod-deps
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/telegram-bot/package.json ./apps/telegram-bot/
+RUN npm install --legacy-peer-deps --production=true
+
+# Runner stage
+FROM base AS runner
+ENV NODE_ENV=production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 botuser
+
+# Copy production dependencies
+COPY --from=prod-deps --chown=botuser:nodejs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=botuser:nodejs /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=prod-deps --chown=botuser:nodejs /app/apps/telegram-bot/node_modules ./apps/telegram-bot/node_modules
+
+# Copy built application
+COPY --from=builder --chown=botuser:nodejs /app/apps/telegram-bot/dist ./apps/telegram-bot/dist
+COPY --from=builder --chown=botuser:nodejs /app/packages/shared/dist ./packages/shared/dist
+
+# Copy package.json files for module resolution
+COPY --chown=botuser:nodejs package.json ./
+COPY --chown=botuser:nodejs packages/shared/package.json ./packages/shared/
+COPY --chown=botuser:nodejs apps/telegram-bot/package.json ./apps/telegram-bot/
+
+USER botuser
+
+CMD ["node", "apps/telegram-bot/dist/index.js"]

@@ -1,0 +1,25 @@
+{
+  "name": "e2e-test-suite",
+  "version": "1.0.0",
+  "description": "E2E test suite for Crypto Trading Bot",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run -c vitest.config.e2e.ts",
+    "test:watch": "vitest watch -c vitest.config.e2e.ts",
+    "test:coverage": "vitest run -c vitest.config.e2e.ts --coverage",
+    "docker:up": "docker compose -f docker-compose.test.yml up -d --build",
+    "docker:down": "docker compose -f docker-compose.test.yml down -v",
+    "docker:logs": "docker compose -f docker-compose.test.yml logs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/pg": "^8.20.0",
+    "@types/ws": "^8.18.1",
+    "vitest": "^3.1.2"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1",
+    "pg": "^8.20.0",
+    "ws": "^8.18.2"
+  }
+}

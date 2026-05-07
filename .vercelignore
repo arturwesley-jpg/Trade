@@ -1,0 +1,14 @@
+node_modules
+.tools
+backup_large_files
+MUD
+claude-mem
+.git
+.gitignore
+*.tgz
+*.tar.gz
+*.rar
+*.zip
+*.log
+.env
+.env.*

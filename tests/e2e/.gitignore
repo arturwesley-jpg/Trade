@@ -1,0 +1,21 @@
+# Test artifacts
+coverage/
+*.log
+.vitest/
+test-results*.json
+html/
+
+# Screenshots and videos
+screenshots/
+videos/
+
+# Node modules (if running tests independently)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+.vitest-cache/

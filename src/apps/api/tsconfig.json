@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/exchange" },
+    { "path": "../../packages/trading-core" },
+    { "path": "../../packages/sentiment" }
+  ],
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/examples/**/*.ts",
+    "src/server.ts",
+    "src/websocket.ts",
+    "src/monitoring-setup.ts",
+    "src/services/market-stream.ts",
+    "src/services/notification-setup.ts",
+    "src/services/realtime-consensus.ts",
+    "src/services/trading-stream.ts"
+  ]
+}

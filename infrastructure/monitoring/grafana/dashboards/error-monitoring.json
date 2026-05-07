@@ -1,0 +1,195 @@
+{
+  "dashboard": {
+    "title": "Trading Platform - Error Monitoring",
+    "tags": ["trading", "errors", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Errors",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_errors_total[5m]))",
+            "legendFormat": "Errors/sec"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Rate Trend",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 18, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_errors_total[5m])) by (severity)",
+            "legendFormat": "{{ severity }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Errors by Component",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_errors_total[5m])) by (component)",
+            "legendFormat": "{{ component }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Errors by Type",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_errors_by_type_total[5m])) by (error_type)",
+            "legendFormat": "{{ error_type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "HTTP 5xx Errors by Route",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"5..\"}[5m])) by (route, status_code)",
+            "legendFormat": "{{ route }} - {{ status_code }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "HTTP 4xx Errors by Route",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"4..\"}[5m])) by (route, status_code)",
+            "legendFormat": "{{ route }} - {{ status_code }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "External API Errors",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_external_api_errors_total[5m])) by (provider, error_type)",
+            "legendFormat": "{{ provider }} - {{ error_type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "WebSocket Errors",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_ws_errors_total[5m])) by (error_type)",
+            "legendFormat": "{{ error_type }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Top 10 Error Types",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(trading_errors_by_type_total[5m])) by (error_type, component))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "error_type": "Error Type",
+                "component": "Component",
+                "Value": "Rate (errors/sec)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Error Severity Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(trading_errors_total) by (severity)",
+            "legendFormat": "{{ severity }}"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Error Rate Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_errors_total[5m])) by (component, severity)",
+            "format": "heatmap"
+          }
+        ],
+        "dataFormat": "tsbuckets"
+      }
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0E27;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1A1F3A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="heroAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0066FF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="heroGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#heroBg)"/>
+
+  <!-- Decorative elements -->
+  <circle cx="1000" cy="100" r="150" fill="#00D4FF" opacity="0.05"/>
+  <circle cx="200" cy="300" r="100" fill="#00FF88" opacity="0.05"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <path d="M0 0 L1200 0 M0 50 L1200 50 M0 100 L1200 100 M0 150 L1200 150 M0 200 L1200 200 M0 250 L1200 250 M0 300 L1200 300 M0 350 L1200 350 M0 400 L1200 400" stroke="#00D4FF" stroke-width="1"/>
+  </g>
+
+  <!-- Main content -->
+  <g transform="translate(100, 120)">
+    <!-- Logo icon -->
+    <rect width="80" height="80" rx="15" fill="url(#heroAccent)" filter="url(#heroGlow)"/>
+    <g transform="translate(15, 20)">
+      <line x1="8" y1="30" x2="8" y2="15" stroke="#0A0E27" stroke-width="3"/>
+      <rect x="5" y="18" width="6" height="12" fill="#0A0E27" rx="1"/>
+
+      <line x1="20" y1="35" x2="20" y2="20" stroke="#0A0E27" stroke-width="3"/>
+      <rect x="17" y="23" width="6" height="12" fill="#0A0E27" rx="1"/>
+
+      <line x1="32" y1="27" x2="32" y2="12" stroke="#0A0E27" stroke-width="3"/>
+      <rect x="29" y="15" width="6" height="12" fill="#0A0E27" rx="1"/>
+
+      <line x1="44" y1="23" x2="44" y2="8" stroke="#0A0E27" stroke-width="3"/>
+      <rect x="41" y="11" width="6" height="12" fill="#0A0E27" rx="1"/>
+    </g>
+    <path d="M 40 55 L 40 65 M 37 58 L 40 55 L 43 58"
+          stroke="#0A0E27"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+
+    <!-- Text content -->
+    <text x="120" y="40" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+      Trade Smarter with AI
+    </text>
+    <text x="120" y="75" font-family="Arial, sans-serif" font-size="20" fill="#6B7280">
+      Real-time signals, automated trading, and intelligent analytics
+    </text>
+  </g>
+
+  <!-- CTA Button -->
+  <g transform="translate(220, 260)">
+    <rect width="200" height="50" rx="25" fill="url(#heroAccent)" filter="url(#heroGlow)"/>
+    <text x="100" y="33" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+      Get Started
+    </text>
+  </g>
+
+  <!-- Stats -->
+  <g transform="translate(700, 150)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#00FF88">98%</text>
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="14" fill="#6B7280">Accuracy Rate</text>
+
+    <text x="150" y="0" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#00D4FF">24/7</text>
+    <text x="150" y="25" font-family="Arial, sans-serif" font-size="14" fill="#6B7280">Monitoring</text>
+
+    <text x="300" y="0" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#0066FF">10+</text>
+    <text x="300" y="25" font-family="Arial, sans-serif" font-size="14" fill="#6B7280">Indicators</text>
+  </g>
+
+  <!-- Mini chart visualization -->
+  <g transform="translate(750, 220)" opacity="0.6">
+    <path d="M 0 50 L 30 45 L 60 30 L 90 35 L 120 20 L 150 15 L 180 10 L 210 5 L 240 0"
+          stroke="url(#heroAccent)"
+          stroke-width="3"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+    <circle cx="240" cy="0" r="5" fill="#00FF88"/>
+  </g>
+</svg>

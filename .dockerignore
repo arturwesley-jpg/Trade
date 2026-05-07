@@ -1,0 +1,142 @@
+# Enhanced .dockerignore for optimized builds
+# Excludes unnecessary files from Docker build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# Keep package-lock.json for reproducible builds
+# package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage
+.nyc_output
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+**/__tests__
+**/__mocks__
+test
+tests
+*.test.tsx
+*.spec.tsx
+
+# Build outputs (exclude from context, built inside container)
+dist
+build
+.next
+out
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE and editors
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Documentation
+*.md
+!README.md
+docs
+examples
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+azure-pipelines.yml
+.jenkins
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Temporary files
+tmp
+temp
+.cache
+.temp
+*.tmp
+
+# Development tools
+.agents
+.codex
+memory
+evolver
+actions-runner
+.openclaude
+
+# Project specific
+*.pdf
+AGENTS.md
+CLAUDE.md
+*.tar.gz
+*.zip
+
+# Infrastructure (not needed in app containers)
+infrastructure
+terraform
+k8s
+monitoring
+deployment
+
+# Data directories
+data
+backups
+*.db
+*.sqlite
+*.sqlite3
+
+# Media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.mp4
+*.mov
+*.avi
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~

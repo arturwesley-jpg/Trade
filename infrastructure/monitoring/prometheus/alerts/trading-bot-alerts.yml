@@ -1,0 +1,359 @@
+groups:
+  - name: trading_bot_alerts
+    interval: 30s
+    rules:
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="trading-bot-api",status=~"5.."}[5m])
+            /
+            rate(http_requests_total{job="trading-bot-api"}[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # Slow Response Time Alert
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{job="trading-bot-api"}[5m])
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Slow API response time"
+          description: "95th percentile response time is {{ $value }}s (threshold: 1s)"
+
+      # Very Slow Response Time Alert
+      - alert: VerySlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{job="trading-bot-api"}[5m])
+          ) > 2
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Very slow API response time"
+          description: "95th percentile response time is {{ $value }}s (threshold: 2s)"
+
+      # High CPU Usage Alert
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job="trading-bot-api"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # Critical CPU Usage Alert
+      - alert: CriticalCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job="trading-bot-api"}[5m]) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is {{ $value }}% (threshold: 90%)"
+
+      # High Memory Usage Alert
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            process_resident_memory_bytes{job="trading-bot-api"}
+            /
+            node_memory_MemTotal_bytes
+          ) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% (threshold: 80%)"
+
+      # Critical Memory Usage Alert
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            process_resident_memory_bytes{job="trading-bot-api"}
+            /
+            node_memory_MemTotal_bytes
+          ) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical memory usage detected"
+          description: "Memory usage is {{ $value }}% (threshold: 90%)"
+
+      # Service Down Alert
+      - alert: ServiceDown
+        expr: up{job="trading-bot-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+
+      # Database Connection Failure
+      - alert: DatabaseConnectionFailure
+        expr: |
+          rate(database_connection_errors_total{job="trading-bot-api"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection failures detected"
+          description: "Database connection error rate: {{ $value }} errors/sec"
+
+      # High Database Connection Pool Usage
+      - alert: HighDatabaseConnectionPoolUsage
+        expr: |
+          (
+            database_connections_active{job="trading-bot-api"}
+            /
+            database_connections_max{job="trading-bot-api"}
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection pool usage"
+          description: "Connection pool usage is {{ $value }}% (threshold: 80%)"
+
+      # Redis Connection Failure
+      - alert: RedisConnectionFailure
+        expr: |
+          rate(redis_connection_errors_total{job="trading-bot-api"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis connection failures detected"
+          description: "Redis connection error rate: {{ $value }} errors/sec"
+
+      # High Redis Memory Usage
+      - alert: HighRedisMemoryUsage
+        expr: |
+          (
+            redis_memory_used_bytes{job="trading-bot-redis"}
+            /
+            redis_memory_max_bytes{job="trading-bot-redis"}
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "High Redis memory usage"
+          description: "Redis memory usage is {{ $value }}% (threshold: 80%)"
+
+      # WebSocket Connection Issues
+      - alert: HighWebSocketDisconnections
+        expr: |
+          rate(websocket_disconnections_total{job="trading-bot-api"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket disconnection rate"
+          description: "WebSocket disconnection rate: {{ $value }} disconnections/sec"
+
+      # Trade Execution Failures
+      - alert: TradeExecutionFailures
+        expr: |
+          rate(trade_execution_failures_total{job="trading-bot-api"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: trading
+        annotations:
+          summary: "Trade execution failures detected"
+          description: "Trade execution failure rate: {{ $value }} failures/sec"
+
+      # High Trade Latency
+      - alert: HighTradeLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(trade_execution_duration_seconds_bucket{job="trading-bot-api"}[5m])
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: trading
+        annotations:
+          summary: "High trade execution latency"
+          description: "95th percentile trade latency is {{ $value }}s (threshold: 5s)"
+
+      # External API Failures (BingX)
+      - alert: ExternalAPIFailures
+        expr: |
+          rate(external_api_errors_total{job="trading-bot-api",provider="bingx"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: external_api
+        annotations:
+          summary: "External API failures detected"
+          description: "BingX API error rate: {{ $value }} errors/sec"
+
+      # Rate Limiting
+      - alert: RateLimitExceeded
+        expr: |
+          rate(rate_limit_exceeded_total{job="trading-bot-api"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Rate limit exceeded"
+          description: "Rate limit exceeded {{ $value }} times/sec"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value }}% available (threshold: 20%)"
+
+      # Disk Space Critical
+      - alert: DiskSpaceCritical
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Critical disk space"
+          description: "Disk space is {{ $value }}% available (threshold: 10%)"
+
+      # SSL Certificate Expiring
+      - alert: SSLCertificateExpiringSoon
+        expr: |
+          (ssl_certificate_expiry_seconds - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate expires in {{ $value }} days (threshold: 30 days)"
+
+      # SSL Certificate Expiring Critical
+      - alert: SSLCertificateExpiringCritical
+        expr: |
+          (ssl_certificate_expiry_seconds - time()) / 86400 < 7
+        for: 1h
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "SSL certificate expiring very soon"
+          description: "SSL certificate expires in {{ $value }} days (threshold: 7 days)"
+
+      # Backup Failure
+      - alert: BackupFailure
+        expr: |
+          time() - backup_last_success_timestamp_seconds > 86400
+        for: 1h
+        labels:
+          severity: critical
+          component: backup
+        annotations:
+          summary: "Backup failure detected"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago (threshold: 24h)"
+
+      # High Request Rate
+      - alert: HighRequestRate
+        expr: |
+          rate(http_requests_total{job="trading-bot-api"}[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High request rate detected"
+          description: "Request rate is {{ $value }} req/sec (threshold: 1000 req/sec)"
+
+      # Telegram Bot Down
+      - alert: TelegramBotDown
+        expr: up{job="trading-bot-telegram"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: telegram
+        annotations:
+          summary: "Telegram bot is down"
+          description: "Telegram bot has been down for more than 2 minutes"
+
+      # Notification Delivery Failures
+      - alert: NotificationDeliveryFailures
+        expr: |
+          rate(notification_delivery_failures_total{job="trading-bot-api"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: notifications
+        annotations:
+          summary: "Notification delivery failures"
+          description: "Notification failure rate: {{ $value }} failures/sec"
+
+      # Pod Restart Loop (Kubernetes)
+      - alert: PodRestartLoop
+        expr: |
+          rate(kube_pod_container_status_restarts_total{namespace="trading-bot"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: kubernetes
+        annotations:
+          summary: "Pod restart loop detected"
+          description: "Pod {{ $labels.pod }} is restarting frequently"
+
+      # Container OOM Killed
+      - alert: ContainerOOMKilled
+        expr: |
+          kube_pod_container_status_last_terminated_reason{reason="OOMKilled",namespace="trading-bot"} == 1
+        for: 1m
+        labels:
+          severity: critical
+          component: kubernetes
+        annotations:
+          summary: "Container killed due to OOM"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} was OOM killed"

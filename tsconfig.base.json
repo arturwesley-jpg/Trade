@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@trade/shared/*": ["packages/shared/src/*"],
+      "@trade/trading-core/*": ["packages/trading-core/src/*"],
+      "@trade/exchange/*": ["packages/exchange/src/*"]
+    }
+  }
+}

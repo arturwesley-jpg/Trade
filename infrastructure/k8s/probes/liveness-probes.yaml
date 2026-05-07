@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-bot-api
+  namespace: trading-bot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: trading-bot-api
+  template:
+    metadata:
+      labels:
+        app: trading-bot-api
+    spec:
+      containers:
+        - name: trading-bot-api
+          image: trading-bot-api:latest
+          ports:
+            - containerPort: 3000
+              name: http
+
+          # Liveness probe - restart container if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+              httpHeaders:
+                - name: X-Health-Check
+                  value: liveness
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Readiness probe - remove from service if not ready
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: 3000
+              httpHeaders:
+                - name: X-Health-Check
+                  value: readiness
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Startup probe - allow slow startup
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"

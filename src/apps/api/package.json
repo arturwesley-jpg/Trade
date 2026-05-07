@@ -1,0 +1,27 @@
+{
+  "name": "@trade/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -b",
+    "db:migrate": "tsx src/migrate.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.3.0",
+    "@fastify/swagger-ui": "^5.2.6",
+    "@trade/exchange": "file:../../packages/exchange",
+    "@trade/shared": "file:../../packages/shared",
+    "@trade/trading-core": "file:../../packages/trading-core",
+    "@trading-bot/database": "file:../../packages/database",
+    "@trading-bot/market-data": "file:../../packages/market-data",
+    "@trading-bot/sentiment": "file:../../packages/sentiment",
+    "@types/express": "^5.0.6",
+    "express": "^5.2.1"
+  }
+}

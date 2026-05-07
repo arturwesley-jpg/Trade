@@ -1,0 +1,31 @@
+{
+  "name": "@trade/defi",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trade/shared": "file:../shared",
+    "ethers": "^6.13.0",
+    "viem": "^2.21.0",
+    "@uniswap/sdk-core": "^5.3.1",
+    "@uniswap/v3-sdk": "^3.13.1",
+    "@pancakeswap/sdk": "^5.7.0",
+    "axios": "^1.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

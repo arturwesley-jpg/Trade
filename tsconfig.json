@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "packages/trading-core" },
+    { "path": "packages/exchange" },
+    { "path": "apps/api" },
+    { "path": "apps/worker" },
+    { "path": "apps/telegram-bot" },
+    { "path": "apps/web" }
+  ]
+}

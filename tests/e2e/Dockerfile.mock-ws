@@ -1,0 +1,11 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+RUN npm install ws express
+
+COPY mock-bingx-server.js .
+
+EXPOSE 8080
+
+CMD ["node", "mock-bingx-server.js"]

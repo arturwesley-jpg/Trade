@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Vercel
+.vercel/
+.vercel.bak-*/
+
+# Tools
+.tools/
+.cache/
+.DS_Store
+*.log
+
+# Graphify (generated)
+.graphify_*
+graphify-out/
+
+# Runtime state
+memory/
+
+# Claude/OpenClaude local
+.claude/worktrees/
+.openclaude/
+.openclaude-profile.json
+.playwright-mcp/
+.agents/
+.codex/
+.rtk/
+.tmp-superpowers-install/
+
+# Test output
+playwright-report/
+test-results/
+
+# Archives
+*.tgz
+*.tar.gz
+*.rar
+*.zip
+backup_large_files/
+.vercel

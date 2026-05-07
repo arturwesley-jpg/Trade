@@ -1,0 +1,33 @@
+.expo/
+node_modules/
+dist/
+build/
+*.log
+*.lock
+.DS_Store
+
+# Android
+android/app/build/
+android/.gradle/
+
+# iOS
+ios/Pods/
+ios/build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+project.xcworkspace/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

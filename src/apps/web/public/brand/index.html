@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradeBot Brand Assets - Preview</title>
+  <style>
+    :root {
+      --color-primary: #00D4FF;
+      --color-secondary: #0066FF;
+      --color-success: #00FF88;
+      --color-danger: #FF4757;
+      --color-bg-dark: #0A0E27;
+      --color-bg-secondary: #1A1F3A;
+      --color-text-primary: #FFFFFF;
+      --color-text-secondary: #6B7280;
+      --gradient-primary: linear-gradient(135deg, #00D4FF 0%, #0066FF 100%);
+      --font-primary: 'Inter', Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background: linear-gradient(135deg, #0A0E27 0%, #1A1F3A 100%);
+      color: var(--color-text-primary);
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h2 {
+      font-size: 32px;
+      margin: 60px 0 30px;
+      color: var(--color-primary);
+    }
+
+    h3 {
+      font-size: 24px;
+      margin: 40px 0 20px;
+      color: var(--color-text-primary);
+    }
+
+    p {
+      color: var(--color-text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .card {
+      background: var(--color-bg-secondary);
+      border-radius: 12px;
+      padding: 30px;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+    }
+
+    .card h4 {
+      margin: 15px 0 10px;
+      font-size: 18px;
+      color: var(--color-text-primary);
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .color-swatch {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px;
+      background: var(--color-bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .color-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .color-info {
+      flex: 1;
+    }
+
+    .color-info h4 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .color-info code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .icon-item {
+      background: var(--color-bg-secondary);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      transition: border-color 0.2s;
+    }
+
+    .icon-item:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+    }
+
+    .icon-item img {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 10px;
+      filter: brightness(0) invert(1);
+    }
+
+    .icon-item p {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: var(--color-text-primary);
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 16px;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 212, 255, 0.3);
+    }
+
+    .typography-sample {
+      background: var(--color-bg-secondary);
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .typography-sample h1,
+    .typography-sample h2,
+    .typography-sample h3,
+    .typography-sample h4 {
+      margin: 10px 0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .preview-large {
+      background: var(--color-bg-secondary);
+      padding: 40px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .preview-large img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>TradeBot Brand Assets</h1>
+      <p>Complete visual identity system for the AI-powered trading platform</p>
+    </header>
+
+    <section>
+      <h2>Logos</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <img src="logos/logo-main.svg" alt="TradeBot Main Logo">
+          <h4>Main Logo</h4>
+          <p>Primary brand representation with circular design</p>
+        </div>
+        <div class="card">
+          <img src="logos/logo-wordmark.svg" alt="TradeBot Wordmark">
+          <h4>Wordmark Logo</h4>
+          <p>Horizontal layout with text and tagline</p>
+        </div>
+        <div class="card">
+          <img src="logos/logo-icon.svg" alt="TradeBot Icon">
+          <h4>Icon Logo</h4>
+          <p>Simplified square icon for small sizes</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Color Palette</h2>
+
+      <h3>Primary Colors</h3>
+      <div class="color-swatch">
+        <div class="color-box" style="background: #00D4FF;"></div>
+        <div class="color-info">
+          <h4>Cyan Blue</h4>
+          <div>
+            <code>#00D4FF</code>
+            <code>RGB(0, 212, 255)</code>
+          </div>
+          <p>Primary brand color, CTAs, links, highlights</p>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-box" style="background: #0066FF;"></div>
+        <div class="color-info">
+          <h4>Deep Blue</h4>
+          <div>
+            <code>#0066FF</code>
+            <code>RGB(0, 102, 255)</code>
+          </div>
+          <p>Secondary accents, gradients</p>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-box" style="background: #00FF88;"></div>
+        <div class="color-info">
+          <h4>Success Green</h4>
+          <div>
+            <code>#00FF88</code>
+            <code>RGB(0, 255, 136)</code>
+          </div>
+          <p>Bullish indicators, positive trends</p>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-box" style="background: #FF4757;"></div>
+        <div class="color-info">
+          <h4>Alert Red</h4>
+          <div>
+            <code>#FF4757</code>
+            <code>RGB(255, 71, 87)</code>
+          </div>
+          <p>Bearish indicators, warnings</p>
+        </div>
+      </div>
+
+      <h3>Neutral Colors</h3>
+      <div class="color-swatch">
+        <div class="color-box" style="background: #0A0E27;"></div>
+        <div class="color-info">
+          <h4>Dark Background</h4>
+          <div>
+            <code>#0A0E27</code>
+            <code>RGB(10, 14, 39)</code>
+          </div>
+          <p>Primary background, dark mode</p>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-box" style="background: #1A1F3A;"></div>
+        <div class="color-info">
+          <h4>Secondary Background</h4>
+          <div>
+            <code>#1A1F3A</code>
+            <code>RGB(26, 31, 58)</code>
+          </div>
+          <p>Cards, panels, elevated surfaces</p>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-box" style="background: #6B7280;"></div>
+        <div class="color-info">
+          <h4>Text Gray</h4>
+          <div>
+            <code>#6B7280</code>
+            <code>RGB(107, 114, 128)</code>
+          </div>
+          <p>Secondary text, labels, captions</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Icon Library</h2>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <img src="icons/icon-portfolio.svg" alt="Portfolio">
+          <p>Portfolio</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-trend-up.svg" alt="Trend Up">
+          <p>Trend Up</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-trend-down.svg" alt="Trend Down">
+          <p>Trend Down</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-bot.svg" alt="Bot">
+          <p>Bot</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-alert.svg" alt="Alert">
+          <p>Alert</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-chart.svg" alt="Chart">
+          <p>Chart</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-wallet.svg" alt="Wallet">
+          <p>Wallet</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-signal.svg" alt="Signal">
+          <p>Signal</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-dashboard.svg" alt="Dashboard">
+          <p>Dashboard</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-backtest.svg" alt="Backtest">
+          <p>Backtest</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-settings.svg" alt="Settings">
+          <p>Settings</p>
+        </div>
+        <div class="icon-item">
+          <img src="icons/icon-strategy.svg" alt="Strategy">
+          <p>Strategy</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Typography</h2>
+      <div class="typography-sample">
+        <h1>Heading 1 - 48px Bold</h1>
+        <h2>Heading 2 - 36px Bold</h2>
+        <h3>Heading 3 - 24px Bold</h3>
+        <h4>Heading 4 - 18px Semi-bold</h4>
+        <p style="font-size: 16px;">Body text - 16px Regular. The quick brown fox jumps over the lazy dog.</p>
+        <p style="font-size: 14px;">Caption text - 14px Regular. The quick brown fox jumps over the lazy dog.</p>
+        <p style="font-size: 12px;">Small text - 12px Regular. The quick brown fox jumps over the lazy dog.</p>
+        <p style="font-family: var(--font-mono); font-size: 14px;">Monospace - 14px Regular. 1234567890 BTC/USDT</p>
+      </div>
+      <button class="btn-primary">Primary Button</button>
+    </section>
+
+    <section>
+      <h2>Marketing Graphics</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <img src="graphics/hero-banner.svg" alt="Hero Banner">
+          <h4>Hero Banner</h4>
+          <p>1200×400px website hero section</p>
+        </div>
+        <div class="card">
+          <img src="graphics/social-banner.svg" alt="Social Banner">
+          <h4>Social Media Banner</h4>
+          <p>1200×630px for social sharing</p>
+        </div>
+        <div class="card">
+          <img src="graphics/social-post-square.svg" alt="Social Post">
+          <h4>Social Post (Square)</h4>
+          <p>1080×1080px for Instagram/Facebook</p>
+        </div>
+        <div class="card">
+          <img src="graphics/social-story.svg" alt="Social Story">
+          <h4>Social Story</h4>
+          <p>1080×1920px for Instagram/Facebook stories</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Data Visualizations</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <img src="visualizations/chart-theme-dark.svg" alt="Chart Theme">
+          <h4>Chart Theme (Dark)</h4>
+          <p>Professional candlestick chart styling</p>
+        </div>
+        <div class="card">
+          <img src="visualizations/neural-network.svg" alt="Neural Network">
+          <h4>Neural Network Visualization</h4>
+          <p>AI model representation</p>
+        </div>
+        <div class="card">
+          <img src="visualizations/algorithmic-pattern-1.svg" alt="Pattern 1">
+          <h4>Algorithmic Pattern 1</h4>
+          <p>Generative art with trading motifs</p>
+        </div>
+        <div class="card">
+          <img src="visualizations/algorithmic-pattern-2.svg" alt="Pattern 2">
+          <h4>Algorithmic Pattern 2</h4>
+          <p>Voronoi-style market segmentation</p>
+        </div>
+      </div>
+    </section>
+
+    <footer style="margin-top: 80px; padding-top: 40px; border-top: 1px solid rgba(0, 212, 255, 0.1); text-align: center;">
+      <p>TradeBot Brand Assets v1.0 • Created 2026-05-05</p>
+      <p style="margin-top: 10px;">
+        <a href="../../../docs/brand-guidelines.md" style="color: var(--color-primary); text-decoration: none;">
+          View Complete Brand Guidelines →
+        </a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

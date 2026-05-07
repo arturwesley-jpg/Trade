@@ -1,0 +1,199 @@
+{
+  "dashboard": {
+    "title": "Trading Platform - API Performance",
+    "tags": ["trading", "api", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate by Route",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total[5m])) by (route)",
+            "legendFormat": "{{ route }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Response Time by Route (p95)",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le, route))",
+            "legendFormat": "{{ route }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Status Code Distribution",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total[5m])) by (status_code)",
+            "legendFormat": "{{ status_code }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(trading_http_requests_total[5m])) * 100",
+            "legendFormat": "5xx Error Rate %"
+          },
+          {
+            "expr": "sum(rate(trading_http_requests_total{status_code=~\"4..\"}[5m])) / sum(rate(trading_http_requests_total[5m])) * 100",
+            "legendFormat": "4xx Error Rate %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error Rate"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Request/Response Size",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 6},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_http_request_size_bytes_bucket[5m])) by (le))",
+            "legendFormat": "Request Size (p95)"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_http_response_size_bytes_bucket[5m])) by (le))",
+            "legendFormat": "Response Size (p95)"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Size"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Response Time Percentiles",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p90"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Top 10 Slowest Routes",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "topk(10, histogram_quantile(0.95, sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le, route)))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "route": "Route",
+                "Value": "p95 Latency (s)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Request Rate Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_request_duration_seconds_bucket[5m])) by (le)",
+            "format": "heatmap",
+            "legendFormat": "{{ le }}"
+          }
+        ],
+        "dataFormat": "tsbuckets"
+      },
+      {
+        "id": 9,
+        "title": "Throughput by Method",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_http_requests_total[5m])) by (method)",
+            "legendFormat": "{{ method }}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Cache Performance",
+        "type": "graph",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(rate(trading_cache_hits_total[5m]))",
+            "legendFormat": "Cache Hits"
+          },
+          {
+            "expr": "sum(rate(trading_cache_misses_total[5m]))",
+            "legendFormat": "Cache Misses"
+          },
+          {
+            "expr": "sum(rate(trading_cache_hits_total[5m])) / (sum(rate(trading_cache_hits_total[5m])) + sum(rate(trading_cache_misses_total[5m]))) * 100",
+            "legendFormat": "Hit Rate %"
+          }
+        ]
+      }
+    ]
+  }
+}

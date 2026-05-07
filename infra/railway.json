@@ -1,0 +1,125 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "apps/api/Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "services": [
+    {
+      "name": "postgres",
+      "image": "postgres:16-alpine",
+      "variables": {
+        "POSTGRES_USER": "trade_user",
+        "POSTGRES_PASSWORD": "${{POSTGRES_PASSWORD}}",
+        "POSTGRES_DB": "trade_db"
+      },
+      "volumes": [
+        {
+          "mountPath": "/var/lib/postgresql/data",
+          "name": "postgres_data"
+        }
+      ],
+      "healthcheck": {
+        "command": ["pg_isready", "-U", "trade_user"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 5
+      }
+    },
+    {
+      "name": "redis",
+      "image": "redis:7-alpine",
+      "command": ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb"],
+      "volumes": [
+        {
+          "mountPath": "/data",
+          "name": "redis_data"
+        }
+      ],
+      "healthcheck": {
+        "command": ["redis-cli", "ping"],
+        "interval": 10,
+        "timeout": 3,
+        "retries": 5
+      }
+    },
+    {
+      "name": "api",
+      "dockerfilePath": "apps/api/Dockerfile",
+      "variables": {
+        "NODE_ENV": "production",
+        "APP_ENV": "production",
+        "APP_MODE": "paper",
+        "SAFE_MODE": "true",
+        "PAPER_TRADING_ONLY": "true",
+        "FEATURE_REAL_TRADING": "false",
+        "API_HOST": "0.0.0.0",
+        "API_PORT": "4000",
+        "DATABASE_URL": "${{POSTGRES_URL}}",
+        "REDIS_URL": "${{REDIS_URL}}",
+        "WEB_ORIGIN": "${{WEB_URL}}",
+        "ADMIN_API_TOKEN": "${{ADMIN_API_TOKEN}}",
+        "LOG_LEVEL": "info"
+      },
+      "healthcheck": {
+        "path": "/health",
+        "interval": 30,
+        "timeout": 10
+      },
+      "domains": [
+        {
+          "domain": "trade-api.up.railway.app"
+        }
+      ]
+    },
+    {
+      "name": "worker",
+      "dockerfilePath": "apps/worker/Dockerfile",
+      "variables": {
+        "NODE_ENV": "production",
+        "APP_ENV": "production",
+        "DATABASE_URL": "${{POSTGRES_URL}}",
+        "REDIS_URL": "${{REDIS_URL}}",
+        "USE_SIMULATED_MARKET": "true",
+        "MARKET_SYMBOLS": "BTC-USDT,ETH-USDT",
+        "LOG_LEVEL": "info"
+      }
+    },
+    {
+      "name": "telegram-bot",
+      "dockerfilePath": "apps/telegram-bot/Dockerfile",
+      "variables": {
+        "NODE_ENV": "production",
+        "APP_ENV": "production",
+        "API_BASE_URL": "${{API_URL}}",
+        "TELEGRAM_BOT_TOKEN": "${{TELEGRAM_BOT_TOKEN}}",
+        "TELEGRAM_ALLOWED_USER_IDS": "${{TELEGRAM_ALLOWED_USER_IDS}}",
+        "TELEGRAM_ADMIN_IDS": "${{TELEGRAM_ADMIN_IDS}}",
+        "LOG_LEVEL": "info"
+      }
+    },
+    {
+      "name": "web",
+      "dockerfilePath": "apps/web/Dockerfile",
+      "variables": {
+        "VITE_API_BASE_URL": "${{API_URL}}"
+      },
+      "healthcheck": {
+        "path": "/health",
+        "interval": 30,
+        "timeout": 10
+      },
+      "domains": [
+        {
+          "domain": "trade.up.railway.app"
+        }
+      ]
+    }
+  ]
+}

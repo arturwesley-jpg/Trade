@@ -1,0 +1,26 @@
+{
+  "name": "@trade/telegram-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "start": "node dist/bot.js",
+    "build": "tsc -b",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@google-cloud/speech": "^7.3.1",
+    "@trade/shared": "file:../../packages/shared",
+    "chartjs-node-canvas": "^5.0.0",
+    "i18next": "^26.0.8",
+    "nodemailer": "8.0.7",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.5"
+  }
+}

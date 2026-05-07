@@ -1,0 +1,10 @@
+export { AuthRepository } from "./auth-repository.js";
+export { AuthService } from "./auth-service.js";
+export { JwtService } from "./jwt-service.js";
+export { PasswordService } from "./password-service.js";
+export { createAuthMiddleware, createOptionalAuthMiddleware } from "./auth-middleware.js";
+export { requireRole, optionalRole } from "./rbac-middleware.js";
+export type { AuthServiceConfig, RegisterData, LoginData } from "./auth-service.js";
+export type { JwtServiceConfig } from "./jwt-service.js";
+export type { AuthMiddlewareConfig } from "./auth-middleware.js";
+export type { CreateUserData, CreateRefreshTokenData } from "./auth-repository.js";
