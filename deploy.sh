@@ -63,8 +63,8 @@ fi
 echo -e "${GREEN}✓${NC} Diretório correto"
 
 # Verificar se render.yaml existe
-if [ ! -f "infra/render.yaml" ]; then
-    echo -e "${RED}✗${NC} infra/render.yaml não encontrado"
+if [ ! -f "render.yaml" ]; then
+    echo -e "${RED}✗${NC} render.yaml não encontrado"
     exit 1
 fi
 
@@ -147,7 +147,7 @@ if command_exists render; then
             echo ""
             echo "🚀 Iniciando deploy via CLI..."
             echo ""
-            render blueprint launch infra/render.yaml
+            render blueprint launch render.yaml
             ;;
         2)
             echo ""
@@ -166,7 +166,7 @@ if command_exists render; then
             echo -e "${GREEN}✓${NC} Verificação completa!"
             echo ""
             echo "Para fazer deploy:"
-            echo "  - Via CLI: render blueprint launch infra/render.yaml"
+            echo "  - Via CLI: render blueprint launch render.yaml"
             echo "  - Via Dashboard: https://dashboard.render.com/blueprints"
             ;;
         *)
