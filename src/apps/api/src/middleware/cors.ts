@@ -11,7 +11,7 @@ export interface CorsConfig {
  */
 export function createCorsConfig(config: CorsConfig = {}) {
   const allowedOrigins = config.allowedOrigins ?? [
-    process.env.WEB_ORIGIN ?? "http://localhost:3000"
+    process.env.WEB_ORIGIN ?? "http://localhost:5173"
   ];
 
   return {

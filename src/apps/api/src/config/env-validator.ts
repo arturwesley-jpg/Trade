@@ -22,7 +22,7 @@ const envSchema = z.object({
   // API
   PORT: z.string().regex(/^\d+$/).default("3001"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+  WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
 
   // Admin
   ADMIN_TOKEN: z.string().min(16).optional(),
@@ -47,7 +47,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW: z.string().regex(/^\d+$/).default("900000"),
 
   // CORS
-  CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),
+  CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:5173,http://localhost:4000"),
 
   // Session
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters").optional(),
