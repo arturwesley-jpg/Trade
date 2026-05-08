@@ -1,4 +1,4 @@
-import type { Client, QueryResult } from 'pg';
+import type { Client, QueryResult, QueryResultRow } from 'pg';
 import { logger } from '../logger.js';
 
 export interface QueryMetrics {
@@ -23,7 +23,7 @@ export class QueryOptimizer {
     this.slowQueryThreshold = slowQueryThreshold; // ms
   }
 
-  async executeWithMetrics<T = any>(
+  async executeWithMetrics<T extends QueryResultRow = any>(
     client: Client,
     query: string,
     params?: any[]
@@ -45,7 +45,7 @@ export class QueryOptimizer {
       return result;
     } catch (error) {
       const duration = Date.now() - start;
-      logger.error({ query, duration, error }, 'Query execution failed');
+      logger.error({ query, duration, error: String(error) }, 'Query execution failed');
       throw error;
     }
   }
@@ -110,7 +110,7 @@ export class QueryOptimizer {
       }, 'Slow query detected');
 
     } catch (error) {
-      logger.error({ error }, 'Failed to analyze slow query');
+      logger.error({ error: String(error) }, 'Failed to analyze slow query');
     }
   }
 
@@ -155,11 +155,11 @@ export class QueryOptimizer {
 
   getAllStats(): Array<{
     query: string;
-    stats: ReturnType<typeof this.getQueryStats>;
+    stats: ReturnType<typeof QueryOptimizer.prototype.getQueryStats>;
   }> {
     const results: Array<{
       query: string;
-      stats: ReturnType<typeof this.getQueryStats>;
+      stats: ReturnType<typeof QueryOptimizer.prototype.getQueryStats>;
     }> = [];
 
     for (const [query] of this.queryMetrics) {
