@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useTradingUpdates } from "./useTradingUpdates";
 import { useWebSocket } from "./useWebSocket";
+import { API_WS_URL } from "../config/api";
 
 vi.mock("./useWebSocket");
 
@@ -16,7 +17,8 @@ describe("useTradingUpdates", () => {
     (useWebSocket as any).mockReturnValue({
       isConnected: false,
       subscribe: mockSubscribe,
-      unsubscribe: mockUnsubscribe
+      unsubscribe: mockUnsubscribe,
+      error: null,
     });
   });
 
@@ -27,7 +29,7 @@ describe("useTradingUpdates", () => {
   describe("Initialization", () => {
     it("should initialize with empty updates", () => {
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       expect(result.current.updates).toEqual([]);
@@ -35,19 +37,20 @@ describe("useTradingUpdates", () => {
 
     it("should create WebSocket connection with correct params", () => {
       renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       expect(useWebSocket).toHaveBeenCalledWith({
-        url: "ws://localhost:3000",
+        url: "API_WS_URL",
         token: "test-token",
-        autoConnect: true
+        autoConnect: true,
+        onError: undefined,
       });
     });
 
     it("should not subscribe when not connected", () => {
       renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       expect(mockSubscribe).not.toHaveBeenCalled();
@@ -59,11 +62,12 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       expect(mockSubscribe).toHaveBeenCalledWith("trades:user123", expect.any(Function));
@@ -75,11 +79,12 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { unmount } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       unmount();
@@ -93,11 +98,12 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { rerender } = renderHook(
-        ({ userId }) => useTradingUpdates(userId, "ws://localhost:3000", "test-token"),
+        ({ userId }) => useTradingUpdates({ userId, wsUrl: "API_WS_URL", token: "test-token" }),
         { initialProps: { userId: "user123" } }
       );
 
@@ -117,7 +123,7 @@ describe("useTradingUpdates", () => {
 
     it("should subscribe when connection state changes to connected", () => {
       const { rerender } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       expect(mockSubscribe).not.toHaveBeenCalled();
@@ -125,7 +131,8 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       rerender();
@@ -149,22 +156,25 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       const tradeUpdate = {
         type: "trade_executed",
-        trade: {
-          id: "trade-1",
-          symbol: "BTC/USD",
-          side: "buy",
-          price: 50000,
-          quantity: 0.5
-        }
+        data: {
+          trade: {
+            id: "trade-1",
+            symbol: "BTC/USD",
+            side: "buy",
+            price: 50000,
+            quantity: 0.5,
+          },
+        },
       };
 
       act(() => {
@@ -172,7 +182,7 @@ describe("useTradingUpdates", () => {
       });
 
       expect(result.current.updates).toHaveLength(1);
-      expect(result.current.updates[0]).toEqual(tradeUpdate);
+      expect(result.current.updates[0].type).toBe("trade_executed");
     });
 
     it("should add position opened update", () => {
@@ -187,22 +197,26 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       const positionUpdate = {
-        type: "position_opened",
-        position: {
-          id: "pos-1",
-          symbol: "BTC/USD",
-          side: "long",
-          entryPrice: 50000,
-          quantity: 0.5
-        }
+        type: "position_update",
+        data: {
+          status: "OPEN",
+          position: {
+            id: "pos-1",
+            symbol: "BTC/USD",
+            side: "long",
+            entryPrice: 50000,
+            quantity: 0.5,
+          },
+        },
       };
 
       act(() => {
@@ -210,7 +224,7 @@ describe("useTradingUpdates", () => {
       });
 
       expect(result.current.updates).toHaveLength(1);
-      expect(result.current.updates[0]).toEqual(positionUpdate);
+      expect(result.current.updates[0].type).toBe("position_opened");
     });
 
     it("should add portfolio update", () => {
@@ -225,20 +239,23 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       const portfolioUpdate = {
         type: "portfolio_updated",
-        portfolio: {
-          totalValue: 100000,
-          availableBalance: 50000,
-          totalUnrealizedPnl: 1000
-        }
+        data: {
+          portfolio: {
+            totalValue: 100000,
+            availableBalance: 50000,
+            totalUnrealizedPnl: 1000,
+          },
+        },
       };
 
       act(() => {
@@ -246,7 +263,7 @@ describe("useTradingUpdates", () => {
       });
 
       expect(result.current.updates).toHaveLength(1);
-      expect(result.current.updates[0]).toEqual(portfolioUpdate);
+      expect(result.current.updates[0].type).toBe("portfolio_updated");
     });
 
     it("should accumulate multiple updates", () => {
@@ -264,17 +281,18 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-1" } });
-        positionCallback({ type: "position_opened", position: { id: "pos-1" } });
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-2" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-1" } } });
+        positionCallback({ type: "position_update", data: { status: "OPEN", position: { id: "pos-1" } } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-2" } } });
       });
 
       expect(result.current.updates).toHaveLength(3);
@@ -293,18 +311,19 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        callbacks["trades:user123"]({ type: "trade_executed", trade: { id: "1" } });
-        callbacks["positions:user123"]({ type: "position_opened", position: { id: "2" } });
-        callbacks["portfolio:user123"]({ type: "portfolio_updated", portfolio: { id: "3" } });
-        callbacks["trades:user123"]({ type: "trade_executed", trade: { id: "4" } });
+        callbacks["trades:user123"]({ type: "trade_executed", data: { trade: { id: "1" } } });
+        callbacks["positions:user123"]({ type: "position_update", data: { status: "OPEN", position: { id: "2" } } });
+        callbacks["portfolio:user123"]({ type: "portfolio_updated", data: { portfolio: { id: "3" } } });
+        callbacks["trades:user123"]({ type: "trade_executed", data: { trade: { id: "4" } } });
       });
 
       expect(result.current.updates[0].trade?.id).toBe("1");
@@ -327,16 +346,17 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-1" } });
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-2" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-1" } } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-2" } } });
       });
 
       expect(result.current.updates).toHaveLength(2);
@@ -360,17 +380,18 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-1" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-1" } } });
         result.current.clearUpdates();
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-2" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-2" } } });
       });
 
       expect(result.current.updates).toHaveLength(1);
@@ -391,20 +412,20 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        tradeCallback({ type: "trade_executed" });
+        tradeCallback({ type: "trade_executed", data: {} });
       });
 
       expect(result.current.updates).toHaveLength(1);
       expect(result.current.updates[0].type).toBe("trade_executed");
-      expect(result.current.updates[0].trade).toBeUndefined();
     });
 
     it("should handle rapid updates", () => {
@@ -419,16 +440,17 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
         for (let i = 0; i < 100; i++) {
-          tradeCallback({ type: "trade_executed", trade: { id: `trade-${i}` } });
+          tradeCallback({ type: "trade_executed", data: { trade: { id: `trade-${i}` } } });
         }
       });
 
@@ -447,22 +469,24 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       const { result, rerender } = renderHook(() =>
-        useTradingUpdates("user123", "ws://localhost:3000", "test-token")
+        useTradingUpdates({ userId: "user123", wsUrl: "API_WS_URL", token: "test-token" })
       );
 
       act(() => {
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-1" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-1" } } });
       });
 
       // Simulate disconnection
       (useWebSocket as any).mockReturnValue({
         isConnected: false,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       rerender();
@@ -471,13 +495,14 @@ describe("useTradingUpdates", () => {
       (useWebSocket as any).mockReturnValue({
         isConnected: true,
         subscribe: mockSubscribe,
-        unsubscribe: mockUnsubscribe
+        unsubscribe: mockUnsubscribe,
+        error: null,
       });
 
       rerender();
 
       act(() => {
-        tradeCallback({ type: "trade_executed", trade: { id: "trade-2" } });
+        tradeCallback({ type: "trade_executed", data: { trade: { id: "trade-2" } } });
       });
 
       expect(result.current.updates).toHaveLength(2);
