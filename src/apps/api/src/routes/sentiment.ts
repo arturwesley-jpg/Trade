@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import type { SentimentService } from '@trading-bot/sentiment';
+import type { SentimentService } from '@trade/sentiment';
 
 const sentimentQuerySchema = z.object({
   symbol: z.string(),

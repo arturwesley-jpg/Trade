@@ -6,8 +6,8 @@
  */
 
 import type { WhaleActivity } from '../types';
-import { logger } from '@trading-bot/shared';
-import { Cache } from '@trading-bot/shared';
+import { logger } from '@trade/shared';
+import { Cache } from '@trade/shared';
 
 export interface WhaleTrackerConfig {
   minTransactionUSD?: number; // Minimum transaction size to track (default: 100k)

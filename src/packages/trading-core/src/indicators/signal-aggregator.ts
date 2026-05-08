@@ -11,7 +11,7 @@
  * - Time-decay for older signals
  */
 
-import type { Candle } from '@trading-bot/market-data';
+import type { Candle } from '@trade/market-data';
 import {
   RSICalculator,
   MACDCalculator,

@@ -6,9 +6,9 @@
  */
 
 import { WhaleTracker } from '../providers/whale-tracker';
-import type { PostgresWhaleEventRepository } from '@trading-bot/database';
+import type { PostgresWhaleEventRepository } from '@trade/database';
 import type { WhaleActivity } from '../types';
-import { logger } from '@trading-bot/shared';
+import { logger } from '@trade/shared';
 
 export interface WhaleEventProcessorConfig {
   whaleTracker: WhaleTracker;

@@ -8,7 +8,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { EnhancedSignalService } from '@trade/trading-core';
 import type { TradingSignal } from '@trade/trading-core';
-import type { Candle } from '@trading-bot/market-data';
+import type { Candle } from '@trade/market-data';
 
 export interface MarketDataProvider {
   getCandles(symbol: string, interval: string, limit: number): Promise<Candle[]>;

@@ -5,9 +5,9 @@
  * Integrates indicator aggregation with database storage.
  */
 
-import type { Candle } from '@trading-bot/market-data';
-import type { Signal } from '@trading-bot/database';
-import { PostgresSignalRepository } from '@trading-bot/database';
+import type { Candle } from '@trade/market-data';
+import type { Signal } from '@trade/database';
+import { PostgresSignalRepository } from '@trade/database';
 import { SignalAggregator, type AggregatedSignal } from './signal-aggregator';
 import { SignalExplanationGenerator, type SignalExplanation } from './signal-explanation';
 

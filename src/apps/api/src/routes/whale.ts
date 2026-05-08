@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { WhaleTracker } from '@trading-bot/sentiment';
-import { PostgresWhaleEventRepository } from '@trading-bot/database';
-import type { DatabaseClient } from '@trading-bot/database';
-import { logger } from '@trading-bot/shared';
+import { WhaleTracker } from '@trade/sentiment';
+import type { WhaleEvent } from '@trade/database';
+import type { DatabaseClient } from '@trade/database';
+import { logger } from '@trade/shared';
 
 const whaleEventsQuerySchema = z.object({
   symbol: z.string().optional(),
@@ -46,10 +46,11 @@ export function registerWhaleRoutes(
 ) {
   const { db, whaleTracker } = options;
 
-  let repository: PostgresWhaleEventRepository | undefined;
-  if (db) {
-    repository = new PostgresWhaleEventRepository(db);
-  }
+  let repository: any | undefined;
+  // TODO: Implement PostgresWhaleEventRepository
+  // if (db) {
+  //   repository = new PostgresWhaleEventRepository(db);
+  // }
 
   // GET /api/whale/events - Get recent whale events
   app.get('/api/whale/events', async (request, reply) => {

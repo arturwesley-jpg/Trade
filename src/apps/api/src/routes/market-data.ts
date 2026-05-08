@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import type { MarketTick, Candle } from '@trading-bot/market-data';
-import { BinanceProvider, BybitProvider, BingXProvider, MarketDataCache } from '@trading-bot/market-data';
+import type { MarketTick, Candle } from '@trade/market-data';
+import { BinanceProvider, BybitProvider, BingXProvider, MarketDataCache } from '@trade/market-data';
 
 const tickerQuerySchema = z.object({
   symbols: z.string().optional(),

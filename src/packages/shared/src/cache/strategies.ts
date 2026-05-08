@@ -1,4 +1,4 @@
-import { DatabaseClient } from '@trading-bot/database';
+import { DatabaseClient } from '@trade/database';
 import { CacheClient } from '../cache';
 import { logger, logError } from '../logger';
 

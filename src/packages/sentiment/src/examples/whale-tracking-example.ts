@@ -5,9 +5,9 @@
  * large cryptocurrency transactions and analyze whale behavior.
  */
 
-import { WhaleTracker, WhaleEventProcessor } from '@trading-bot/sentiment';
-import { PostgresWhaleEventRepository, createDatabaseClient } from '@trading-bot/database';
-import { logger } from '@trading-bot/shared';
+import { WhaleTracker, WhaleEventProcessor } from '@trade/sentiment';
+import { PostgresWhaleEventRepository, createDatabaseClient } from '@trade/database';
+import { logger } from '@trade/shared';
 
 async function main() {
   // Initialize whale tracker

@@ -4,9 +4,9 @@
  * Orchestrates signal generation with caching, persistence, and real-time updates.
  */
 
-import type { Candle } from '@trading-bot/market-data';
-import type { Signal as DBSignal } from '@trading-bot/database';
-import { PostgresSignalRepository } from '@trading-bot/database';
+import type { Candle } from '@trade/market-data';
+import type { Signal as DBSignal } from '@trade/database';
+import { PostgresSignalRepository } from '@trade/database';
 import type { AggregatedSentiment } from '@trade/sentiment';
 import { CacheClient } from '@trade/shared';
 import { EnhancedSignalGenerator, type EnhancedSignalGeneratorConfig } from './enhanced-signal-generator';

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { DatabaseService } from '@trading-bot/database';
+import { DatabaseService } from '@trade/database';
 import { RedisService } from '@trade/shared';
 import { cleanupDatabase } from '../helpers/setup';
 

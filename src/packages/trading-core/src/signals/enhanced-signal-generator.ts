@@ -5,7 +5,7 @@
  * comprehensive trading signals with confidence scoring and risk management.
  */
 
-import type { Candle } from '@trading-bot/market-data';
+import type { Candle } from '@trade/market-data';
 import type { AggregatedSentiment } from '@trade/sentiment';
 import {
   RSICalculator,
