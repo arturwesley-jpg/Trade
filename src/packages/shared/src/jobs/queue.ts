@@ -16,6 +16,7 @@ export interface QueueConfig {
   name: string;
   redisUrl?: string;
   defaultJobOptions?: {
+    priority?: number;
     attempts?: number;
     backoff?: {
       type: 'exponential' | 'fixed';
@@ -76,7 +77,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
     }
   ): Promise<Job<T, R>> {
     try {
-      const job = await this.queue.add(name, data, options);
+      const job = await this.queue.add(name as any, data as any, options as any) as unknown as Job<T, R>;
       logger.debug({ jobId: job.id, name, queueName: this.config.name }, 'Job added to queue');
       return job;
     } catch (error) {
@@ -97,7 +98,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
     }>
   ): Promise<Job<T, R>[]> {
     try {
-      const addedJobs = await this.queue.addBulk(jobs);
+      const addedJobs = await this.queue.addBulk(jobs as any) as unknown as Job<T, R>[];
       logger.info({ count: jobs.length, queueName: this.config.name }, 'Bulk jobs added to queue');
       return addedJobs;
     } catch (error) {
@@ -117,7 +118,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
 
     this.worker = new Worker<T, R>(
       this.config.name,
-      async (job) => {
+      async (job: Job<T, R>) => {
         logger.debug({ jobId: job.id, name: job.name }, 'Processing job');
         try {
           const result = await processor(job);
@@ -153,7 +154,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
   }
 
   async getJob(jobId: string): Promise<Job<T, R> | undefined> {
-    return this.queue.getJob(jobId);
+    return this.queue.getJob(jobId) as Promise<Job<T, R> | undefined>;
   }
 
   async getJobs(
@@ -161,7 +162,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
     start = 0,
     end = 10
   ): Promise<Job<T, R>[]> {
-    return this.queue.getJobs(types, start, end);
+    return this.queue.getJobs(types, start, end) as Promise<Job<T, R>[]>;
   }
 
   async getJobCounts(): Promise<{
@@ -172,7 +173,15 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
     delayed: number;
     paused: number;
   }> {
-    return this.queue.getJobCounts();
+    const counts = await this.queue.getJobCounts();
+    return {
+      waiting: counts.waiting ?? 0,
+      active: counts.active ?? 0,
+      completed: counts.completed ?? 0,
+      failed: counts.failed ?? 0,
+      delayed: counts.delayed ?? 0,
+      paused: counts.paused ?? 0,
+    };
   }
 
   async pause(): Promise<void> {
