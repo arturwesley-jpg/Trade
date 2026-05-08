@@ -1,12 +1,12 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/shared" },
-    { "path": "packages/trading-core" },
-    { "path": "packages/exchange" },
-    { "path": "apps/api" },
-    { "path": "apps/worker" },
-    { "path": "apps/telegram-bot" },
-    { "path": "apps/web" }
+    { "path": "src/packages/shared" },
+    { "path": "src/packages/trading-core" },
+    { "path": "src/packages/exchange" },
+    { "path": "src/apps/api" },
+    { "path": "src/apps/worker" },
+    { "path": "src/apps/telegram-bot" },
+    { "path": "src/apps/web" }
   ]
 }

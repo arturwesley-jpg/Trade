@@ -5,13 +5,14 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "downlevelIteration": true,
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@trade/shared/*": ["packages/shared/src/*"],
-      "@trade/trading-core/*": ["packages/trading-core/src/*"],
-      "@trade/exchange/*": ["packages/exchange/src/*"]
+      "@trade/shared/*": ["src/packages/shared/src/*"],
+      "@trade/trading-core/*": ["src/packages/trading-core/src/*"],
+      "@trade/exchange/*": ["src/packages/exchange/src/*"]
     }
   }
 }
