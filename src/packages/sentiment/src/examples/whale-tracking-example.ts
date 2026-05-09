@@ -134,7 +134,7 @@ async function main() {
 
   // Stop processor
   eventProcessor.stop();
-  await db.end();
+  await db.close();
 
   console.log('\n=== Whale Tracking Demo Complete ===');
 }
