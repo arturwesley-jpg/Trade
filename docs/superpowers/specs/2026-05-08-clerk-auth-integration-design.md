@@ -205,6 +205,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS clerk_metadata JSONB DEFAULT '{}';
 -- Create index for fast clerk_user_id lookups
 CREATE INDEX IF NOT EXISTS idx_users_clerk_user_id ON users(clerk_user_id);
 
+-- Note: If `deleted_at` column doesn't exist, add it:
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+
 -- Backfill: existing users keep their data, clerk_user_id will be NULL until synced
 ```
 
@@ -297,7 +300,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 const JWKS_URL = process.env.CLERK_JWKS_URL ||
-  'https://clerk.your-app.com/.well-known/jwks.json';
+  'https://clerk.accounts.dev/.well-known/jwks.json'; // Replace with your Clerk app's domain
 
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 
@@ -361,8 +364,8 @@ VITE_API_BASE_URL=http://localhost:4000
 ```env
 CLERK_SECRET_KEY=sk_test_...
 CLERK_WEBHOOK_SECRET=whsec_...
-CLERK_JWKS_URL=https://clerk.your-app.com/.well-known/jwks.json
-CLERK_ISSUER=https://clerk.your-app.com
+CLERK_JWKS_URL=https://clerk.accounts.dev/.well-known/jwks.json
+CLERK_ISSUER=https://clerk.accounts.dev
 ```
 
 **Note:** The Clerk secret key and webhook secret must be obtained from the Clerk Dashboard → API Keys page.
@@ -375,7 +378,7 @@ In the Clerk Dashboard (app_3Ck4QBMAnj49vew7tPHhUiiEea5):
 
 1. **Social Connections** → Enable Google, GitHub
 2. **Email, Phone, Username** → Enable Email (magic link/code)
-3. **Webhooks** → Add endpoint: `https://your-api.com/webhooks/clerk`
+3. **Webhooks** → Add endpoint: `https://<your-deployed-api>/webhooks/clerk` (use ngrok for local dev)
    - Subscribe to: `user.created`, `user.updated`, `user.deleted`
 4. **API Keys** → Copy `Secret Key` and `Webhook Signing Secret`
 
