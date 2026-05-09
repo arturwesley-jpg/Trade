@@ -7,7 +7,7 @@ import { TradingProvider } from '../contexts/TradingContext.js';
  * Test utilities for rendering components with providers
  */
 
-export const renderWithProviders = (ui: React.ReactElement) => {
+export const renderWithProviders = (ui: React.ReactElement): ReturnType<typeof render> => {
   return render(
     <AuthProvider>
       <TradingProvider>

@@ -45,6 +45,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: UserRole;
+  tier?: string;
   iat: number;
   exp: number;
 }

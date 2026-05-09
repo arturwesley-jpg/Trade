@@ -256,9 +256,9 @@ export class PortfolioBacktester {
       const transactionCost = tradeValue * (transactionCostPct / 100);
 
       if (trade.action === 'BUY') {
-        const totalCost = tradeValue + transactionCost;
-        if (newCash >= totalCost) {
-          newCash -= totalCost;
+        const buyCost = tradeValue + transactionCost;
+        if (newCash >= buyCost) {
+          newCash -= buyCost;
           const currentQty = newHoldings.get(trade.symbol) ?? 0;
           newHoldings.set(trade.symbol, currentQty + trade.quantity);
           totalCost += transactionCost;

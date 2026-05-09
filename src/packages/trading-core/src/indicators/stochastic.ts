@@ -198,16 +198,18 @@ export class StochasticCalculator {
     // Bullish divergence: price lower low, %K higher low
     const priceLowerLow = recentCloses[3] < recentCloses[0];
     const kHigherLow = recentK[3] > recentK[0];
+    const kAnyOversold = recentK.some(k => k <= this.oversoldThreshold);
 
-    if (priceLowerLow && kHigherLow && recentK[0] < this.oversoldThreshold) {
+    if (priceLowerLow && kHigherLow && kAnyOversold) {
       return 'BULLISH';
     }
 
     // Bearish divergence: price higher high, %K lower high
     const priceHigherHigh = recentCloses[3] > recentCloses[0];
     const kLowerHigh = recentK[3] < recentK[0];
+    const kAnyOverbought = recentK.some(k => k >= this.overboughtThreshold);
 
-    if (priceHigherHigh && kLowerHigh && recentK[0] > this.overboughtThreshold) {
+    if (priceHigherHigh && kLowerHigh && kAnyOverbought) {
       return 'BEARISH';
     }
 

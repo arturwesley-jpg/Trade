@@ -233,7 +233,8 @@ export class VolumeAnalysisCalculator {
    * Calculate basic volume analysis (without high/low data)
    */
   calculate(closes: number[], volumes: number[]): VolumeAnalysisResult | null {
-    if (closes.length < this.averagePeriod || volumes.length !== closes.length) {
+    const minDataPoints = Math.max(2, Math.min(this.averagePeriod, 5));
+    if (closes.length < minDataPoints || volumes.length !== closes.length) {
       return null;
     }
 

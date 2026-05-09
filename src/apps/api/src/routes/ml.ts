@@ -29,7 +29,7 @@ modelManager.initialize().catch(err => {
  */
 router.post('/predict/:symbol', async (req: Request, res: Response) => {
   try {
-    const { symbol } = req.params;
+    const symbol = req.params.symbol as string;
     const { candles, horizon } = req.body as { candles: Candle[]; horizon?: number };
 
     if (!candles || !Array.isArray(candles) || candles.length === 0) {
@@ -51,7 +51,7 @@ router.post('/predict/:symbol', async (req: Request, res: Response) => {
       prediction
     });
   } catch (error) {
-    logger.error('Price prediction failed', { error });
+    logger.error('Price prediction failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to generate prediction',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -65,14 +65,14 @@ router.post('/predict/:symbol', async (req: Request, res: Response) => {
  */
 router.get('/patterns/:symbol', async (req: Request, res: Response) => {
   try {
-    const { symbol } = req.params;
-    const { candles } = req.query;
+    const symbol = req.params.symbol as string;
+    const candlesParam = req.query.candles as string | undefined;
 
-    if (!candles) {
+    if (!candlesParam) {
       return res.status(400).json({ error: 'Candles data required' });
     }
 
-    const candleData: Candle[] = JSON.parse(candles as string);
+    const candleData: Candle[] = JSON.parse(candlesParam);
 
     // Detect patterns
     const chartPatterns = PatternRecognition.detectChartPatterns(candleData);
@@ -98,7 +98,7 @@ router.get('/patterns/:symbol', async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    logger.error('Pattern detection failed', { error });
+    logger.error('Pattern detection failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to detect patterns',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -112,15 +112,17 @@ router.get('/patterns/:symbol', async (req: Request, res: Response) => {
  */
 router.get('/models', async (req: Request, res: Response) => {
   try {
-    const { symbol, modelType, status } = req.query;
+    const symbol = req.query.symbol as string | undefined;
+    const modelType = req.query.modelType as string | undefined;
+    const status = req.query.status as string | undefined;
 
     let versions = modelManager.getVersions(
-      symbol as string | undefined,
-      modelType as string | undefined
+      symbol,
+      modelType
     );
 
     if (status) {
-      versions = versions.filter(v => v.status === status);
+      versions = versions.filter((v: any) => v.status === status);
     }
 
     const activeModel = modelManager.getActiveModel();
@@ -133,7 +135,7 @@ router.get('/models', async (req: Request, res: Response) => {
       models: versions
     });
   } catch (error) {
-    logger.error('Failed to list models', { error });
+    logger.error('Failed to list models', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to list models',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -185,7 +187,7 @@ router.post('/train', async (req: Request, res: Response) => {
       model: version
     });
   } catch (error) {
-    logger.error('Model training failed', { error });
+    logger.error('Model training failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to train model',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -199,7 +201,7 @@ router.post('/train', async (req: Request, res: Response) => {
  */
 router.post('/deploy/:modelId', async (req: Request, res: Response) => {
   try {
-    const { modelId } = req.params;
+    const modelId = req.params.modelId as string;
 
     await modelManager.deployModel(modelId);
 
@@ -210,7 +212,7 @@ router.post('/deploy/:modelId', async (req: Request, res: Response) => {
       message: `Model ${modelId} deployed successfully`
     });
   } catch (error) {
-    logger.error('Model deployment failed', { error });
+    logger.error('Model deployment failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to deploy model',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -224,7 +226,7 @@ router.post('/deploy/:modelId', async (req: Request, res: Response) => {
  */
 router.post('/evaluate/:modelId', async (req: Request, res: Response) => {
   try {
-    const { modelId } = req.params;
+    const modelId = req.params.modelId as string;
     const { testData } = req.body as { testData: Candle[] };
 
     if (!testData || !Array.isArray(testData)) {
@@ -241,7 +243,7 @@ router.post('/evaluate/:modelId', async (req: Request, res: Response) => {
       metrics
     });
   } catch (error) {
-    logger.error('Model evaluation failed', { error });
+    logger.error('Model evaluation failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to evaluate model',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -280,7 +282,7 @@ router.post('/abtest/start', async (req: Request, res: Response) => {
       abTest
     });
   } catch (error) {
-    logger.error('Failed to start A/B test', { error });
+    logger.error('Failed to start A/B test', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to start A/B test',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -305,7 +307,7 @@ router.post('/abtest/stop', async (req: Request, res: Response) => {
       result
     });
   } catch (error) {
-    logger.error('Failed to stop A/B test', { error });
+    logger.error('Failed to stop A/B test', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to stop A/B test',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -327,7 +329,7 @@ router.get('/abtest/status', async (req: Request, res: Response) => {
       active: abTest !== null
     });
   } catch (error) {
-    logger.error('Failed to get A/B test status', { error });
+    logger.error('Failed to get A/B test status', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to get A/B test status',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -364,7 +366,7 @@ router.post('/features/extract', async (req: Request, res: Response) => {
       count: features.length
     });
   } catch (error) {
-    logger.error('Feature extraction failed', { error });
+    logger.error('Feature extraction failed', { error: error instanceof Error ? error : undefined });
     res.status(500).json({
       error: 'Failed to extract features',
       message: error instanceof Error ? error.message : 'Unknown error'

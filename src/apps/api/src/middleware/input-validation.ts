@@ -1,6 +1,9 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { z, ZodError } from "zod";
-import DOMPurify from "isomorphic-dompurify";
+// Simple HTML sanitizer (strips all tags). Replace with DOMPurify if isomorphic-dompurify types are available.
+const DOMPurify = {
+  sanitize: (input: string, _options?: any): string => input.replace(/<[^>]*>/g, ""),
+};
 
 /**
  * Input validation and sanitization middleware

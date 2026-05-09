@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SentimentScoring } from '../scoring/sentiment-scoring';
 import type { AggregatedSentiment } from '../types';
-import type { AggregatedSignal } from '@trade/trading-core';
+import type { AggregatedSignal } from '@trade/shared';
 
 describe('SentimentScoring', () => {
   let scoring: SentimentScoring;

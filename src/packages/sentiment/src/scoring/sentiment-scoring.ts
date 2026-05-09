@@ -5,7 +5,7 @@
  * enhanced trading signals with sentiment-adjusted confidence.
  */
 
-import type { AggregatedSignal } from '@trade/trading-core';
+import type { AggregatedSignal } from '@trade/shared';
 import type { AggregatedSentiment } from '../types';
 
 export interface SentimentScoringConfig {

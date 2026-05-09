@@ -117,7 +117,7 @@ export const DEFAULT_ENDPOINT_LIMITS: Record<string, Partial<RateLimitTier>> = {
  */
 export class RateLimiter {
   private redis: RedisClientType | null = null;
-  private readonly config: RateLimitConfig;
+  readonly config: RateLimitConfig;
   private readonly keyPrefix: string;
   private connected = false;
   private metrics: RateLimitMetrics = {

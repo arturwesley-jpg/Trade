@@ -167,10 +167,10 @@ export class MetricsService {
 
     try {
       const trades = await this.getClosedTrades(userId);
-      const tradeMetrics = trades.map(this.convertToTradeMetrics);
+      const tradeMetrics = this.extractTradeMetrics(trades);
 
       const performance = this.metricsCalculator.calculate(tradeMetrics);
-      const risk = this.riskAnalyzer.calculate(tradeMetrics, []);
+      const risk = this.riskAnalyzer.analyze(tradeMetrics);
 
       const metrics: AdvancedMetrics = {
         performance,
@@ -321,11 +321,11 @@ export class MetricsService {
     const snapshot = this.repository.snapshot();
 
     // Filter by userId if provided (for multi-user support)
-    let trades = snapshot.trades.filter(t => t.status === "CLOSED");
+    let trades = snapshot.trades.filter((t: Trade) => t.status === "CLOSED");
 
     if (userId) {
       // Note: Trade type doesn't have userId yet, but we're preparing for it
-      trades = trades.filter(t => (t as any).userId === userId);
+      trades = trades.filter((t: Trade) => (t as any).userId === userId);
     }
 
     return trades;

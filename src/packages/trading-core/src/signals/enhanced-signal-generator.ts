@@ -6,7 +6,7 @@
  */
 
 import type { Candle } from '@trade/market-data';
-import type { AggregatedSentiment } from '@trade/sentiment';
+import type { AggregatedSentiment } from '@trade/shared';
 import {
   RSICalculator,
   MACDCalculator,

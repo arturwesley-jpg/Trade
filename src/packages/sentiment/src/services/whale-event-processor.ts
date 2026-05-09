@@ -283,19 +283,19 @@ export class WhaleEventProcessor {
 
       const symbolEvents = events.filter((e) => e.symbol === symbol);
 
-      const totalVolume = symbolEvents.reduce((sum, e) => sum + e.usdValue, 0);
+      const totalVolume = symbolEvents.reduce((sum, e) => sum + parseFloat(e.usdValue || '0'), 0);
       const largestTransaction = Math.max(
-        ...symbolEvents.map((e) => e.usdValue),
+        ...symbolEvents.map((e) => parseFloat(e.usdValue || '0')),
         0
       );
 
       const exchangeInflows = symbolEvents
         .filter((e) => e.eventType === 'exchange_inflow')
-        .reduce((sum, e) => sum + e.usdValue, 0);
+        .reduce((sum, e) => sum + parseFloat(e.usdValue || '0'), 0);
 
       const exchangeOutflows = symbolEvents
         .filter((e) => e.eventType === 'exchange_outflow')
-        .reduce((sum, e) => sum + e.usdValue, 0);
+        .reduce((sum, e) => sum + parseFloat(e.usdValue || '0'), 0);
 
       const netFlow = exchangeOutflows - exchangeInflows;
 

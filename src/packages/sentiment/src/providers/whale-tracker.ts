@@ -524,7 +524,7 @@ export class WhaleTracker {
     blockchain: string
   ): WhaleActivity[] {
     return transactions
-      .map((tx) => {
+      .map((tx): WhaleActivity | null => {
         const valueInEth = parseFloat(tx.value) / 1e18;
         const amountUSD = valueInEth * 2000; // Simplified, should use real price
 

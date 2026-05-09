@@ -18,11 +18,7 @@ export * from "./indicators/index.js";
 export { EnhancedSignalGenerator, EnhancedSignalService, SignalCache } from "./signals/index.js";
 export type {
   SignalType,
-  SignalStrength,
-  TechnicalIndicators,
-  SentimentData,
-  SignalMetadata,
-  SignalConfidence
+  SignalStrength
 } from "./signals/signal-types.js";
 
 // Export backtesting (TradingSignal from here takes precedence)

@@ -8,7 +8,9 @@
     "composite": true
   },
   "references": [
-    { "path": "../shared" }
+    { "path": "../shared" },
+    { "path": "../market-data" },
+    { "path": "../database" }
   ],
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.test.ts"]

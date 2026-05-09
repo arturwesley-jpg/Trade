@@ -24,6 +24,7 @@ export interface TradingRepository {
   saveTrade(trade: Trade): void;
   saveMarketTick(tick: MarketTick): void;
   appendAudit(type: AuditEvent["type"], correlationId: string, payload: Record<string, unknown>): void;
+  snapshot(): TradingRepositorySnapshot;
 }
 
 export class InMemoryTradingRepository implements TradingRepository {

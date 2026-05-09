@@ -38,7 +38,8 @@ export interface NewsArticle {
  */
 export interface FearGreedIndex {
   value: number; // 0-100
-  valueClassification: string; // e.g. "Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"
+  valueClassification?: string; // e.g. "Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"
+  classification: 'EXTREME_FEAR' | 'FEAR' | 'NEUTRAL' | 'GREED' | 'EXTREME_GREED';
   timestamp: Date;
   timeUntilUpdate?: string;
 }

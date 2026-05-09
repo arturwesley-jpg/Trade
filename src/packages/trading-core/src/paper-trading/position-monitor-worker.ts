@@ -94,7 +94,7 @@ export class PositionMonitorWorker {
       const closeCheck = this.positionManager.shouldClosePosition(position);
 
       if (closeCheck.shouldClose && closeCheck.reason && closeCheck.price) {
-        this.autoClosePosition(position, closeCheck.price, closeCheck.reason);
+        this.autoClosePosition(position, closeCheck.price, closeCheck.reason as 'STOP_LOSS' | 'TAKE_PROFIT' | 'TRAILING_STOP');
       }
     }
   }

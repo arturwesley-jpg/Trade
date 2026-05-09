@@ -7,7 +7,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { EnhancedSignalService } from '@trade/trading-core';
-import type { TradingSignal } from '@trade/trading-core';
+import type { TradingSignal } from '@trade/trading-core/signals/signal-types.js';
 import type { Candle } from '@trade/market-data';
 
 export interface MarketDataProvider {

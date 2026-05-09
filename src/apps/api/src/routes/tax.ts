@@ -45,7 +45,7 @@ router.get('/report/:year', async (req, res) => {
 
     res.json(report);
   } catch (error) {
-    logger.error('Error generating tax report:', error);
+    logger.error('Error generating tax report', { error: error instanceof Error ? error : undefined });
     res.status(500).json({ error: 'Failed to generate tax report' });
   }
 });
@@ -85,7 +85,7 @@ router.get('/preview', async (req, res) => {
 
     res.json(preview);
   } catch (error) {
-    logger.error('Error generating tax preview:', error);
+    logger.error('Error generating tax preview', { error: error instanceof Error ? error : undefined });
     res.status(500).json({ error: 'Failed to generate tax preview' });
   }
 });
@@ -155,7 +155,7 @@ router.post('/export', async (req, res) => {
         res.status(400).json({ error: 'Invalid export format' });
     }
   } catch (error) {
-    logger.error('Error exporting tax report:', error);
+    logger.error('Error exporting tax report', { error: error instanceof Error ? error : undefined });
     res.status(500).json({ error: 'Failed to export tax report' });
   }
 });
@@ -183,7 +183,7 @@ router.get('/transactions', async (req, res) => {
       transactions: filteredTransactions,
     });
   } catch (error) {
-    logger.error('Error fetching tax transactions:', error);
+    logger.error('Error fetching tax transactions', { error: error instanceof Error ? error : undefined });
     res.status(500).json({ error: 'Failed to fetch tax transactions' });
   }
 });

@@ -1,3 +1,58 @@
+export type SentimentScore =
+  | 'VERY_BEARISH'
+  | 'BEARISH'
+  | 'NEUTRAL'
+  | 'BULLISH'
+  | 'VERY_BULLISH';
+
+export interface AggregatedSentiment {
+  symbol: string;
+  overallScore: number; // -1 to 1
+  sentiment: SentimentScore;
+  confidence: number; // 0-100
+  components: {
+    news: {
+      score: number;
+      count: number;
+      weight: number;
+    };
+    fearGreed: {
+      score: number;
+      weight: number;
+    };
+    social: {
+      score: number;
+      volume: number;
+      weight: number;
+    };
+    whales: {
+      score: number;
+      activity: number;
+      weight: number;
+    };
+  };
+  timestamp: Date;
+}
+
+export interface AggregatedSignal {
+  symbol: string;
+  signal: 'BUY' | 'SELL' | 'NEUTRAL';
+  confidence: number; // 0-100
+  strength: number; // 0-100
+  indicators: {
+    rsi: { signal: string; value: number; weight: number };
+    macd: { signal: string; value: number; weight: number };
+    bollinger: { signal: string; value: number; weight: number };
+    stochastic: { signal: string; value: number; weight: number };
+    obv: { signal: string; value: number; weight: number };
+    adx: { signal: string; value: number; weight: number };
+    atr: { signal: string; value: number; weight: number };
+    supportResistance: { signal: string; value: number; weight: number };
+  };
+  explanation: string;
+  timestamp: Date;
+}
+
 export type TradeMode = "paper" | "demo" | "live";
 export type TradeSide = "LONG" | "SHORT";
 export type PositionStatus = "OPEN" | "CLOSED";
@@ -270,3 +325,12 @@ export const DEFAULT_RISK_LIMITS: RiskLimits = {
   maxMonthlyDrawdownPct: 10,
   longOnly: true
 };
+
+export interface Candle {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}

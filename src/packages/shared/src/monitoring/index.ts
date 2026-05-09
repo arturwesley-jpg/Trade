@@ -54,5 +54,5 @@ export type { DegradationStrategy } from './graceful-degradation.js';
 export { profiler, Profiler, Profile, CPUProfiler } from './profiler.js';
 export type { PerformanceMetric as ProfilerMetric, MemorySnapshot } from './profiler.js';
 
-export { metrics, MetricsCollector, Metric } from './metrics.js';
+export { metrics, MetricsCollector } from './metrics.js';
 export type { MetricPoint, AggregatedMetric } from './metrics.js';

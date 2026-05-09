@@ -45,12 +45,13 @@ export class OrderServiceImpl implements OrderService {
 
   async createOrder(request: CreateOrderRequest): Promise<PaperOrder> {
     const openRequest: OpenPaperOrderRequest = {
-      userId: request.userId,
       symbol: request.symbol,
       side: request.side === "buy" ? "LONG" : "SHORT",
-      quantity: request.quantity,
+      mode: "paper",
       entryPrice: request.price || 0,
-      timestamp: new Date()
+      marginUsdt: request.quantity * (request.price || 0),
+      leverage: 1,
+      idempotencyKey: `order-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     };
 
     const result = await this.paperEngine.open(openRequest);
@@ -66,8 +67,8 @@ export class OrderServiceImpl implements OrderService {
       price: position.entryPrice,
       status: "filled",
       type: "market",
-      createdAt: new Date(position.entryTime),
-      updatedAt: new Date(position.entryTime)
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     // Store in memory
@@ -135,8 +136,7 @@ export class OrderServiceImpl implements OrderService {
       userPositions[positionIndex] = {
         ...position,
         exitPrice,
-        exitTime: new Date().toISOString(),
-        status: "closed"
+        status: "CLOSED"
       };
     }
   }

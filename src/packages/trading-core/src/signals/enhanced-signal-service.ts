@@ -7,7 +7,7 @@
 import type { Candle } from '@trade/market-data';
 import type { Signal as DBSignal } from '@trade/database';
 import { PostgresSignalRepository } from '@trade/database';
-import type { AggregatedSentiment } from '@trade/sentiment';
+import type { AggregatedSentiment } from '@trade/shared';
 import { CacheClient } from '@trade/shared';
 import { EnhancedSignalGenerator, type EnhancedSignalGeneratorConfig } from './enhanced-signal-generator';
 import { SignalCache, type SignalCacheConfig } from './signal-cache';
@@ -276,8 +276,8 @@ export class EnhancedSignalService {
       score: signal.confidence,
       rationale: signal.reasoning,
       indicators: signal.indicators as any,
-      sentimentScore: signal.sentiment?.score ?? null,
-      whaleImpact: signal.sentiment?.components?.whales ?? null,
+      sentimentScore: signal.sentiment?.score ?? undefined,
+      whaleImpact: signal.sentiment?.components?.whales ?? undefined,
       shouldExecute: signal.type !== 'hold' && signal.confidence >= 70,
       timestamp: new Date(signal.timestamp),
     };

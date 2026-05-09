@@ -65,7 +65,7 @@ import {
 } from "./backtest/index.js";
 import { registerSentimentRoutes } from "./routes/sentiment.js";
 import { registerWhaleRoutes } from "./routes/whale.js";
-import { SentimentService } from "@trading-bot/sentiment";
+import { SentimentService } from "@trade/sentiment";
 import type { Client } from "pg";
 
 const paperOrderSchema = z.object({
@@ -119,6 +119,7 @@ export interface AppOptions {
   disableRedisSubscriber?: boolean;
   cryptoPanicApiKey?: string;
   enablePaperTradingV2?: boolean;
+  db?: any;
 }
 
 type RuntimeTradingRepository = TradingRepository & {
@@ -139,7 +140,7 @@ const backtestResults = new Map<string, {
   error?: string;
 }>();
 
-export function buildApp(options: AppOptions = {}) {
+export async function buildApp(options: AppOptions = {}) {
   const app = Fastify({ logger: false });
   const repo: RuntimeTradingRepository = options.repository ?? new InMemoryTradingRepository();
   const dataAggregator = new DataAggregator({
@@ -1186,7 +1187,7 @@ export function buildApp(options: AppOptions = {}) {
   // Register tax reporting routes
   const taxRoutes = await import("./routes/tax.js");
   app.register(async (instance) => {
-    instance.register(taxRoutes.default, { prefix: "/api/tax" });
+    instance.register(taxRoutes.default as any, { prefix: "/api/tax" });
   });
 
   return app;

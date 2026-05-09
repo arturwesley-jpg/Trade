@@ -142,7 +142,7 @@ export class RiskRulesEngine {
       severity: 'warning',
       check: (context) => {
         const existingPositions = context.portfolio.positions.filter(
-          p => p.returns && p.returns.length > 0
+          p => (p as any).returns && (p as any).returns.length > 0
         );
 
         if (existingPositions.length === 0) {

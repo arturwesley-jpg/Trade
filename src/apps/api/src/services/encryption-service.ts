@@ -43,7 +43,7 @@ export class EncryptionService {
       encrypted += cipher.final("hex");
 
       // Get auth tag for GCM mode
-      const authTag = cipher.getAuthTag();
+      const authTag = (cipher as any).getAuthTag();
 
       // Return IV + authTag + encrypted data
       return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
@@ -72,7 +72,7 @@ export class EncryptionService {
 
       // Create decipher
       const decipher = createDecipheriv(this.algorithm, key, iv);
-      decipher.setAuthTag(authTag);
+      (decipher as any).setAuthTag(authTag);
 
       // Decrypt data
       let decrypted = decipher.update(encrypted, "hex", "utf8");

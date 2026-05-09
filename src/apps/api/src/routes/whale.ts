@@ -89,7 +89,7 @@ export function registerWhaleRoutes(
         },
       });
     } catch (error) {
-      logger.error('Failed to fetch whale events', { error });
+      logger.error('Failed to fetch whale events', { error: error instanceof Error ? error : undefined });
       return reply.status(400).send({
         error: {
           code: 'INVALID_REQUEST',
@@ -106,7 +106,7 @@ export function registerWhaleRoutes(
       try {
         const { address } = request.params;
         const query = walletQuerySchema.parse({
-          ...request.query,
+          ...(request.query as Record<string, unknown>),
           address,
         });
 
@@ -144,7 +144,7 @@ export function registerWhaleRoutes(
           },
         });
       } catch (error) {
-        logger.error('Failed to fetch wallet activity', { error });
+        logger.error('Failed to fetch wallet activity', { error: error instanceof Error ? error : undefined });
         return reply.status(400).send({
           error: {
             code: 'INVALID_REQUEST',
@@ -162,7 +162,7 @@ export function registerWhaleRoutes(
       try {
         const { symbol } = request.params;
         const query = whaleAnalysisQuerySchema.parse({
-          ...request.query,
+          ...(request.query as Record<string, unknown>),
           symbol,
         });
 
@@ -216,7 +216,7 @@ export function registerWhaleRoutes(
           },
         });
       } catch (error) {
-        logger.error('Failed to analyze whale activity', { error });
+        logger.error('Failed to analyze whale activity', { error: error instanceof Error ? error : undefined });
         return reply.status(400).send({
           error: {
             code: 'INVALID_REQUEST',
@@ -258,7 +258,7 @@ export function registerWhaleRoutes(
         data: pattern,
       });
     } catch (error) {
-      logger.error('Failed to detect accumulation pattern', { error });
+      logger.error('Failed to detect accumulation pattern', { error: error instanceof Error ? error : undefined });
       return reply.status(400).send({
         error: {
           code: 'INVALID_REQUEST',
@@ -299,7 +299,7 @@ export function registerWhaleRoutes(
         data: pattern,
       });
     } catch (error) {
-      logger.error('Failed to detect distribution pattern', { error });
+      logger.error('Failed to detect distribution pattern', { error: error instanceof Error ? error : undefined });
       return reply.status(400).send({
         error: {
           code: 'INVALID_REQUEST',
@@ -316,7 +316,7 @@ export function registerWhaleRoutes(
       try {
         const { symbol } = request.params;
         const query = exchangeFlowQuerySchema.parse({
-          ...request.query,
+          ...(request.query as Record<string, unknown>),
           symbol,
         });
 
@@ -342,7 +342,7 @@ export function registerWhaleRoutes(
           },
         });
       } catch (error) {
-        logger.error('Failed to analyze exchange flow', { error });
+        logger.error('Failed to analyze exchange flow', { error: error instanceof Error ? error : undefined });
         return reply.status(400).send({
           error: {
             code: 'INVALID_REQUEST',
@@ -380,7 +380,7 @@ export function registerWhaleRoutes(
         },
       });
     } catch (error) {
-      logger.error('Failed to analyze stablecoin flows', { error });
+      logger.error('Failed to analyze stablecoin flows', { error: error instanceof Error ? error : undefined });
       return reply.status(400).send({
         error: {
           code: 'INVALID_REQUEST',

@@ -100,7 +100,7 @@ export function registerPaperTradingRoutes(app: any, options: PaperTradingRoutes
     try {
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.user!.id;
-      const positionId = req.params.id;
+      const positionId = req.params.id as string;
 
       const position = paperTradingService.getPosition(positionId);
 
@@ -128,7 +128,7 @@ export function registerPaperTradingRoutes(app: any, options: PaperTradingRoutes
     try {
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.user!.id;
-      const positionId = req.params.id;
+      const positionId = req.params.id as string;
 
       const position = paperTradingService.getPosition(positionId);
 
@@ -164,7 +164,7 @@ export function registerPaperTradingRoutes(app: any, options: PaperTradingRoutes
     try {
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.user!.id;
-      const positionId = req.params.id;
+      const positionId = req.params.id as string;
       const { exitPrice } = req.body;
 
       const position = paperTradingService.getPosition(positionId);
