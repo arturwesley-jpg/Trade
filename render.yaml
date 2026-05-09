@@ -1,11 +1,12 @@
 services:
-  # API Service - usando buildpack em vez de Docker
+  # API Service
   - type: web
     name: trade-api
-    env: node
+    runtime: node
     region: oregon
     plan: starter
     branch: main
+    repo: https://github.com/arturwesley-jpg/Trade.git
     buildCommand: npm install --legacy-peer-deps && npm run build -w src/packages/shared && npm run build -w src/packages/trading-core && npm run build -w src/packages/exchange && npm run build -w src/apps/api
     startCommand: node src/apps/api/dist/main.js
     healthCheckPath: /health
@@ -13,11 +14,15 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: "3001"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: trade-postgres
+          property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromDatabase:
+          name: trade-redis
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -29,23 +34,64 @@ services:
       - key: BINANCE_API_SECRET
         sync: false
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
       - key: TELEGRAM_CHAT_ID
-        sync: false
+        value: "274321499"
       - key: SENTRY_DSN
         sync: false
       - key: LOG_LEVEL
         value: info
 
+  # Telegram Bot Service
+  - type: web
+    name: trade-telegram-bot
+    runtime: node
+    region: oregon
+    plan: starter
+    branch: main
+    repo: https://github.com/arturwesley-jpg/Trade.git
+    buildCommand: npm install --legacy-peer-deps && npm run build -w src/packages/shared && npm run build -w src/apps/telegram-bot
+    startCommand: node src/apps/telegram-bot/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
+      - key: TELEGRAM_ALLOWED_USER_IDS
+        value: "274321499"
+      - key: API_BASE_URL
+        fromService:
+          name: trade-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trade-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: trade-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: WEB_ORIGIN
+        fromService:
+          name: trade-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
 databases:
   - name: trade-postgres
     databaseName: trade
     user: trade
+    plan: basic-1gb
     region: oregon
-    plan: starter
     ipAllowList: []
 
   - name: trade-redis
+    plan: basic-256mb
     region: oregon
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
