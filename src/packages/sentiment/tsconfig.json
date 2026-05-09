@@ -8,7 +8,9 @@
     "declarationMap": true
   },
   "references": [
-    { "path": "../trading-core" }
+    { "path": "../trading-core" },
+    { "path": "../shared" },
+    { "path": "../database" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

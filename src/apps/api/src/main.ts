@@ -3,7 +3,7 @@ import { buildApp } from "./app.js";
 const host = process.env.API_HOST ?? "0.0.0.0";
 const port = Number(process.env.API_PORT ?? process.env.PORT ?? 4000);
 
-const app = buildApp({
+const app = await buildApp({
   liveTradingEnabled: process.env.ENABLE_LIVE_TRADING === "true",
   adminToken: process.env.ADMIN_API_TOKEN,
   coingeckoApiKey: process.env.COINGECKO_API_KEY,

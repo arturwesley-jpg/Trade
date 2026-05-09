@@ -8,8 +8,8 @@ afterEach(() => {
 });
 
 // Mock environment variables
-vi.stubEnv('VITE_API_URL', 'http://localhost:3000');
-vi.stubEnv('VITE_WS_URL', 'ws://localhost:3000');
+vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:4000');
+vi.stubEnv('VITE_API_WS_URL', 'ws://localhost:4000');
 
 // Mock localStorage
 const localStorageMock = {

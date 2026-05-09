@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useWebSocket } from "./useWebSocket.js";
+import { API_WS_URL } from "../config/api";
 import type { Position, TradingSignal } from "../shared-types.js";
 
 export interface TradingUpdate {
@@ -13,7 +14,7 @@ export interface TradingUpdate {
 
 export interface UseTradingUpdatesOptions {
   userId?: string;
-  wsUrl: string;
+  wsUrl?: string;
   token?: string;
   autoConnect?: boolean;
   maxUpdates?: number;
@@ -46,17 +47,16 @@ export interface UseTradingUpdatesReturn {
  * @example
  * ```tsx
  * const { positions, signals, updates } = useTradingUpdates({
- *   userId: 'user-123',
- *   wsUrl: 'ws://localhost:3000/ws',
- *   token: 'auth-token',
- *   onPositionUpdate: (pos) => console.log('Position updated:', pos)
+ * userId: 'user-123',
+ * token: 'auth-token',
+ * onPositionUpdate: (pos) => console.log('Position updated:', pos)
  * });
  * ```
  */
 export function useTradingUpdates(options: UseTradingUpdatesOptions): UseTradingUpdatesReturn {
   const {
     userId,
-    wsUrl,
+    wsUrl = API_WS_URL,
     token,
     autoConnect = true,
     maxUpdates = 100,

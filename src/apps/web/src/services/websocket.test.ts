@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MarketDataWebSocket } from "./websocket.js";
+import { API_WS_URL } from "../config/api.js";
 
 // Mock WebSocket class
 class MockWebSocket {
@@ -59,7 +60,7 @@ describe("MarketDataWebSocket", () => {
     global.WebSocket = MockWebSocket as any;
 
     ws = new MarketDataWebSocket({
-      url: "ws://localhost:3000/market-data",
+      url: `${API_WS_URL}/market-data`,
       onCandle: onCandleMock,
       onError: onErrorMock,
       onStateChange: onStateChangeMock

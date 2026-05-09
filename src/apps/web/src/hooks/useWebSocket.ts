@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { WebSocketClient } from "@trade/shared/websocket-client";
+import { API_WS_URL } from "../config/api";
 import type { ConnectionState } from "@trade/shared/websocket-protocol";
 
 export interface UseWebSocketOptions {
-  url: string;
+  url?: string;
   token?: string;
   autoConnect?: boolean;
   autoReconnect?: boolean;
@@ -42,9 +43,8 @@ export interface UseWebSocketReturn {
  * @example
  * ```tsx
  * const { isConnected, subscribe, unsubscribe } = useWebSocket({
- *   url: 'ws://localhost:3000/ws',
- *   token: 'auth-token',
- *   autoConnect: true
+ * token: 'auth-token',
+ * autoConnect: true
  * });
  * ```
  */
@@ -63,8 +63,9 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
   }, [options]);
 
   useEffect(() => {
+    const url = options.url ?? API_WS_URL;
     const client = new WebSocketClient({
-      url: options.url,
+      url,
       token: options.token,
       autoReconnect: options.autoReconnect ?? true,
       reconnectInterval: options.reconnectInterval,

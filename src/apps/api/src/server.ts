@@ -57,7 +57,7 @@ if (process.env.DATABASE_URL) {
 const repository = await buildRepository();
 
 // Build Fastify app
-const app = buildApp({
+const app = await buildApp({
   liveTradingEnabled: process.env.ENABLE_LIVE_TRADING === "true",
   repository,
   adminToken: process.env.ADMIN_API_TOKEN,

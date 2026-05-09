@@ -2,7 +2,7 @@ import { WebSocketClient } from '@trade/shared/websocket-client';
 import * as SecureStore from 'expo-secure-store';
 
 const WS_URL = __DEV__
-  ? 'ws://localhost:3000/ws'
+  ? 'ws://localhost:4000/ws'
   : 'wss://api.tradepro.com/ws';
 
 class WebSocketService {

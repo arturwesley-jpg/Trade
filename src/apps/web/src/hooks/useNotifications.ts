@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useWebSocket } from "./useWebSocket.js";
+import { API_WS_URL } from "../config/api";
 
 export type NotificationType = "info" | "success" | "warning" | "error" | "alert";
 export type NotificationPriority = "low" | "medium" | "high" | "critical";
@@ -16,7 +17,7 @@ export interface Notification {
 }
 
 export interface UseNotificationsOptions {
-  wsUrl: string;
+  wsUrl?: string;
   token?: string;
   userId?: string;
   autoConnect?: boolean;
@@ -53,17 +54,16 @@ export interface UseNotificationsReturn {
  * @example
  * ```tsx
  * const { notifications, unreadCount, markAsRead } = useNotifications({
- *   wsUrl: 'ws://localhost:3000/ws',
- *   token: 'auth-token',
- *   userId: 'user-123',
- *   maxNotifications: 50,
- *   onNotification: (notif) => toast.show(notif.message)
+ * token: 'auth-token',
+ * userId: 'user-123',
+ * maxNotifications: 50,
+ * onNotification: (notif) => toast.show(notif.message)
  * });
  * ```
  */
 export function useNotifications(options: UseNotificationsOptions): UseNotificationsReturn {
   const {
-    wsUrl,
+    wsUrl = API_WS_URL,
     token,
     userId,
     autoConnect = true,

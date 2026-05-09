@@ -86,13 +86,13 @@ export class CachedRepository<T> {
   }
 
   private async queryDatabase(query: string, params: any[]): Promise<T | null> {
-    const result = await this.db.query<T>(query, params);
-    return result.rows[0] ?? null;
+    const result = await this.db.query(query, params);
+    return (result.rows[0] as T) ?? null;
   }
 
   private async queryDatabaseMany(query: string, params: any[]): Promise<T[]> {
-    const result = await this.db.query<T>(query, params);
-    return result.rows;
+    const result = await this.db.query(query, params);
+    return result.rows as T[];
   }
 }
 
@@ -120,7 +120,7 @@ export class CacheWarmer {
           await this.cache.set(table.cacheKey, result.rows, table.ttl);
           logger.info({ table: table.name, rows: result.rowCount }, 'Cache warmed');
         } catch (error) {
-          logger.error({ table: table.name, error }, 'Failed to warm cache');
+          logger.error({ table: table.name, error: error instanceof Error ? error : new Error(String(error)) }, 'Failed to warm cache');
         }
       })
     );
@@ -156,7 +156,7 @@ export class CacheWarmer {
           const result = await this.db.query(q.query, q.params);
           await this.cache.set(q.key, result.rows, q.ttl);
         } catch (error) {
-          logger.error({ key: q.key, error }, 'Failed to warm user cache');
+          logger.error({ key: q.key, error: error instanceof Error ? error : new Error(String(error)) }, 'Failed to warm user cache');
         }
       })
     );

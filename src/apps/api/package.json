@@ -18,9 +18,9 @@
     "@trade/exchange": "file:../../packages/exchange",
     "@trade/shared": "file:../../packages/shared",
     "@trade/trading-core": "file:../../packages/trading-core",
-    "@trading-bot/database": "file:../../packages/database",
-    "@trading-bot/market-data": "file:../../packages/market-data",
-    "@trading-bot/sentiment": "file:../../packages/sentiment",
+    "@trade/database": "file:../../packages/database",
+    "@trade/market-data": "file:../../packages/market-data",
+    "@trade/sentiment": "file:../../packages/sentiment",
     "@types/express": "^5.0.6",
     "express": "^5.2.1"
   }

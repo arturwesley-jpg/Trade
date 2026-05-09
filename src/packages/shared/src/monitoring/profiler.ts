@@ -146,7 +146,7 @@ export class Profiler {
 
   getAllStats(): Array<{
     name: string;
-    stats: ReturnType<typeof this.getStats>;
+    stats: ReturnType<Profiler['getStats']>;
   }> {
     const names = new Set(this.metrics.map((m) => m.name));
     return Array.from(names).map((name) => ({
@@ -189,10 +189,10 @@ export class Profiler {
   }
 
   report(): {
-    metrics: ReturnType<typeof this.getAllStats>;
+    metrics: ReturnType<Profiler['getAllStats']>;
     memory: {
       current: MemorySnapshot;
-      leak: ReturnType<typeof this.detectMemoryLeak>;
+      leak: ReturnType<Profiler['detectMemoryLeak']>;
     };
   } {
     return {
@@ -259,7 +259,7 @@ export class CPUProfiler {
 
   async profile<T>(fn: () => Promise<T>): Promise<{
     result: T;
-    profile: ReturnType<typeof this.end>;
+    profile: ReturnType<CPUProfiler['end']>;
   }> {
     this.start();
     const result = await fn();

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWebSocket } from "./useWebSocket.js";
+import { API_WS_URL } from "../config/api";
 import type { MarketTick } from "../shared-types.js";
 
 export interface MarketData {
@@ -16,7 +17,7 @@ export interface MarketData {
 
 export interface UseMarketDataOptions {
   symbol: string;
-  wsUrl: string;
+  wsUrl?: string;
   token?: string;
   autoConnect?: boolean;
   onUpdate?: (data: MarketData) => void;
@@ -46,14 +47,13 @@ export interface UseMarketDataReturn {
  * @example
  * ```tsx
  * const { marketData, isConnected, lastUpdate } = useMarketData({
- *   symbol: 'BTCUSDT',
- *   wsUrl: 'ws://localhost:3000/ws',
- *   onUpdate: (data) => console.log('Price update:', data.price)
+ * symbol: 'BTCUSDT',
+ * onUpdate: (data) => console.log('Price update:', data.price)
  * });
  * ```
  */
 export function useMarketData(options: UseMarketDataOptions): UseMarketDataReturn {
-  const { symbol, wsUrl, token, autoConnect = true, onUpdate, onError } = options;
+  const { symbol, wsUrl = API_WS_URL, token, autoConnect = true, onUpdate, onError } = options;
 
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);

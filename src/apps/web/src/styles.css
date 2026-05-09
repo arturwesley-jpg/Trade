@@ -1,3 +1,5 @@
+@import url('./styles/trading-dashboard.css');
+
 :root {
   color-scheme: dark;
   --bg: #050912;
@@ -2634,5 +2636,4 @@ td:first-child {
   }
 }
 
-/* Import Advanced Trading Dashboard Styles */
-@import url('./trading-dashboard.css');
+@import url('./styles/trading-dashboard.css');

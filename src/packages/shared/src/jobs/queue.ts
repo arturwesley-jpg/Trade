@@ -81,7 +81,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
       logger.debug({ jobId: job.id, name, queueName: this.config.name }, 'Job added to queue');
       return job;
     } catch (error) {
-      logger.error({ error, name, queueName: this.config.name }, 'Failed to add job to queue');
+      logger.error({ error: error instanceof Error ? error : new Error(String(error)), name, queueName: this.config.name }, 'Failed to add job to queue');
       throw error;
     }
   }
@@ -102,7 +102,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
       logger.info({ count: jobs.length, queueName: this.config.name }, 'Bulk jobs added to queue');
       return addedJobs;
     } catch (error) {
-      logger.error({ error, queueName: this.config.name }, 'Failed to add bulk jobs');
+      logger.error({ error: error instanceof Error ? error : new Error(String(error)), queueName: this.config.name }, 'Failed to add bulk jobs');
       throw error;
     }
   }
@@ -125,7 +125,7 @@ export class JobQueue<T extends JobData = JobData, R extends JobResult = JobResu
           logger.info({ jobId: job.id, name: job.name }, 'Job completed successfully');
           return result;
         } catch (error) {
-          logger.error({ jobId: job.id, name: job.name, error }, 'Job processing failed');
+          logger.error({ jobId: job.id, name: job.name, error: error instanceof Error ? error : new Error(String(error)) }, 'Job processing failed');
           throw error;
         }
       },

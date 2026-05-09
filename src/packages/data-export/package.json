@@ -1,5 +1,5 @@
 {
-  "name": "@trading-bot/data-export",
+  "name": "@trade/data-export",
   "version": "1.0.0",
   "description": "Data export functionality with multiple formats and GDPR compliance",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@trading-bot/database": "file:../database",
+    "@trade/database": "file:../database",
     "@trade/shared": "file:../shared",
     "csv-writer": "^1.6.0",
     "exceljs": "^4.4.0",

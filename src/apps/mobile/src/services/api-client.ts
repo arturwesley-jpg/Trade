@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import type { LoginRequest, LoginResponse, RegisterRequest, User } from '@/types';
 
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api'
+  ? 'http://localhost:4000/api'
   : 'https://api.tradepro.com/api';
 
 class ApiClient {

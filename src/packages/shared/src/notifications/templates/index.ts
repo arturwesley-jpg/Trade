@@ -35,15 +35,15 @@ export const templates: Record<string, NotificationTemplateDefinition> = {
     body: `🎯 New {{signalType}} Signal Detected
 
 Symbol: {{symbol}}
-Price: ${{price}}
+Price: \${{price}}
 Signal Strength: {{strength}}/100
 Timeframe: {{timeframe}}
 Indicators: {{indicators}}
 
 Recommendation: {{recommendation}}
 
-{{#if stopLoss}}Stop Loss: ${{stopLoss}}{{/if}}
-{{#if takeProfit}}Take Profit: ${{takeProfit}}{{/if}}
+\${{#if stopLoss}}Stop Loss: \${{stopLoss}}{{/if}}
+\${{#if takeProfit}}Take Profit: \${{takeProfit}}{{/if}}
 
 Generated at: {{timestamp}}`,
     htmlBody: `<div style="font-family: Arial, sans-serif;">
@@ -81,9 +81,9 @@ Generated at: {{timestamp}}`,
     body: `🚨 Price Alert Triggered
 
 Symbol: {{symbol}}
-Current Price: ${{currentPrice}}
+Current Price: \${{currentPrice}}
 Alert Condition: {{condition}}
-Target Price: ${{targetPrice}}
+Target Price: \${{targetPrice}}
 
 {{message}}
 
@@ -120,8 +120,8 @@ Order ID: {{orderId}}
 Symbol: {{symbol}}
 Side: {{side}}
 Quantity: {{quantity}}
-Price: ${{price}}
-Total: ${{total}}
+Price: \${{price}}
+Total: \${{total}}
 
 Status: {{status}}
 Executed at: {{timestamp}}`,
@@ -158,10 +158,10 @@ Executed at: {{timestamp}}`,
     subject: "{{symbol}} Price Update",
     body: `📊 Price Update: {{symbol}}
 
-Current Price: ${{price}}
+Current Price: \${{price}}
 Change: {{change}}% ({{changeDirection}})
-24h High: ${{high24h}}
-24h Low: ${{low24h}}
+24h High: \${{high24h}}
+24h Low: \${{low24h}}
 Volume: {{volume}}
 
 Updated at: {{timestamp}}`,
@@ -200,8 +200,6 @@ Sent at: {{timestamp}}`,
     ]
   }
 };
-
-export { templates };
 
 /**
  * Get template by ID

@@ -17,8 +17,9 @@ import type {
   CreateBacktestRequest,
   BacktestMetricsRecord
 } from "@trade/shared";
+import { API_BASE_URL } from "./config/api";
 
-export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+export const apiBaseUrl = API_BASE_URL;
 
 export interface Health {
   status: string;
