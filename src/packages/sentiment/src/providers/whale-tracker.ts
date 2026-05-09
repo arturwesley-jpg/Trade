@@ -7,7 +7,7 @@
 
 import type { WhaleActivity } from '../types';
 import { logger } from '@trade/shared';
-import { Cache } from '@trade/shared';
+import { CacheClient } from '@trade/shared';
 
 export interface WhaleTrackerConfig {
   minTransactionUSD?: number; // Minimum transaction size to track (default: 100k)
@@ -70,7 +70,7 @@ export class WhaleTracker {
   private whaleAlertApiKey?: string;
   private etherscanApiKey?: string;
   private bscscanApiKey?: string;
-  private cache?: Cache;
+  private cache?: CacheClient;
   private knownWallets: Map<string, WalletInfo> = new Map();
   private rateLimiters: Map<string, { lastCall: number; minInterval: number }> = new Map();
 
@@ -87,9 +87,8 @@ export class WhaleTracker {
     this.bscscanApiKey = config.bscscanApiKey || process.env.BSCSCAN_API_KEY;
 
     if (config.enableCaching !== false) {
-      this.cache = new Cache({
+      this.cache = new CacheClient({
         ttl: config.cacheTTL || 300, // 5 minutes default
-        maxSize: 1000,
       });
     }
 
@@ -148,7 +147,7 @@ export class WhaleTracker {
 
       return activities;
     } catch (error) {
-      logger.error('Failed to fetch Whale Alert transactions', { error });
+      logger.error('Failed to fetch Whale Alert transactions', { error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }
@@ -208,7 +207,7 @@ export class WhaleTracker {
 
       return activities;
     } catch (error) {
-      logger.error('Failed to fetch wallet transactions', { error, address, blockchain });
+      logger.error('Failed to fetch wallet transactions', { error: error instanceof Error ? error.message : String(error), address, blockchain });
       return [];
     }
   }
