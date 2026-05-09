@@ -49,13 +49,13 @@ export class WhaleEventProcessor {
 
     // Process immediately
     this.processEvents().catch((error) => {
-      logger.error('Failed to process whale events', { error });
+      logger.error('Failed to process whale events', { error: error instanceof Error ? error.message : String(error) });
     });
 
     // Schedule periodic processing
     this.intervalId = setInterval(() => {
       this.processEvents().catch((error) => {
-        logger.error('Failed to process whale events', { error });
+        logger.error('Failed to process whale events', { error: error instanceof Error ? error.message : String(error) });
       });
     }, this.processingInterval);
   }
@@ -87,7 +87,7 @@ export class WhaleEventProcessor {
       try {
         await this.processSymbol(symbol);
       } catch (error) {
-        logger.error('Failed to process whale events for symbol', { symbol, error });
+        logger.error('Failed to process whale events for symbol', { symbol, error: error instanceof Error ? error.message : String(error) });
       }
     }
   }
@@ -119,7 +119,7 @@ export class WhaleEventProcessor {
         count: activities.length,
       });
     } catch (error) {
-      logger.error('Failed to process symbol', { symbol, error });
+      logger.error('Failed to process symbol', { symbol, error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -132,7 +132,8 @@ export class WhaleEventProcessor {
       // Check if event already exists (by txHash)
       const existingEvents = await this.repository.findRecent(1000);
       const exists = existingEvents.some(
-        (e) => e.metadata?.txHash === activity.txHash
+        (e) => e.symbol === activity.symbol && e.amount === activity.amount.toString() &&
+               Math.abs(new Date(e.timestamp).getTime() - activity.timestamp.getTime()) < 60000
       );
 
       if (exists) {
@@ -140,7 +141,8 @@ export class WhaleEventProcessor {
         return;
       }
 
-      // Map activity type to event type
+      // Map activity type to event type (existingEvents dedup above)
+      // No metadata field in WhaleEvent; txHash info not stored
       const eventType = this.mapActivityTypeToEventType(activity.type);
 
       // Create event
@@ -153,12 +155,6 @@ export class WhaleEventProcessor {
         destination: activity.toAddress || 'unknown',
         severity: activity.significance,
         timestamp: activity.timestamp,
-        metadata: {
-          txHash: activity.txHash,
-          type: activity.type,
-          fromAddress: activity.fromAddress,
-          toAddress: activity.toAddress,
-        },
       });
 
       logger.debug('Stored whale event', {
@@ -167,7 +163,7 @@ export class WhaleEventProcessor {
         amount: activity.amountUSD,
       });
     } catch (error) {
-      logger.error('Failed to store whale event', { error, activity });
+      logger.error('Failed to store whale event', { error: error instanceof Error ? error.message : String(error), activity: { symbol: activity.symbol, type: activity.type } });
     }
   }
 
@@ -224,8 +220,8 @@ export class WhaleEventProcessor {
         (e) => e.eventType === 'exchange_outflow'
       );
 
-      const totalInflow = inflowEvents.reduce((sum, e) => sum + e.usdValue, 0);
-      const totalOutflow = outflowEvents.reduce((sum, e) => sum + e.usdValue, 0);
+      const totalInflow = inflowEvents.reduce((sum, e) => sum + parseFloat(e.usdValue || '0'), 0);
+      const totalOutflow = outflowEvents.reduce((sum, e) => sum + parseFloat(e.usdValue || '0'), 0);
       const netFlow = totalOutflow - totalInflow;
 
       // Calculate correlation score
@@ -254,7 +250,7 @@ export class WhaleEventProcessor {
         summary,
       };
     } catch (error) {
-      logger.error('Failed to analyze correlation', { error, symbol });
+      logger.error('Failed to analyze correlation', { error: error instanceof Error ? error.message : String(error), symbol });
       return {
         correlation: 0,
         confidence: 0,
@@ -320,7 +316,7 @@ export class WhaleEventProcessor {
         sentiment,
       };
     } catch (error) {
-      logger.error('Failed to get activity summary', { error, symbol });
+      logger.error('Failed to get activity summary', { error: error instanceof Error ? error.message : String(error), symbol });
       throw error;
     }
   }
