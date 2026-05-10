@@ -279,7 +279,7 @@ const TradingHub = memo(function TradingHub({
 
   // Legacy WebSocket for signals and positions
   const wsUrl = apiBaseUrl.replace(/^http/, "ws") + "/ws";
-  const { status: websocketStatus, isConnected } = useWebSocket({
+  useWebSocket({
     url: wsUrl,
     onMarketTick: (tick) => {
       setTicks((prev) => {

@@ -3,7 +3,7 @@
  * Displays temporary notification messages with different types
  */
 
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export interface Toast {
@@ -141,6 +141,3 @@ export function useToast() {
     warning
   };
 }
-
-// Add missing import
-import { useState } from "react";

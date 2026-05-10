@@ -1,6 +1,6 @@
 import { DatabaseClient } from '@trade/database';
 import { CacheClient } from '../cache';
-import { logger, logError } from '../logger';
+import { logger } from '../logger';
 
 export interface CacheConfig {
   enabled: boolean;

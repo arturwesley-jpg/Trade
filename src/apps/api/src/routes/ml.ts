@@ -5,12 +5,10 @@
 
 import { Router, type Request, type Response } from 'express';
 import {
-  PricePredictor,
   PatternRecognition,
   ModelManager,
   FeatureEngineering,
-  type ModelConfig,
-  type Prediction
+  type ModelConfig
 } from '@trade/ml';
 import type { Candle } from '@trade/shared';
 import { logger } from '@trade/shared';

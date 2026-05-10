@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { logger } from "../../logger.js";
 import type { NotificationHandler, NotificationMessage } from "../types.js";
 

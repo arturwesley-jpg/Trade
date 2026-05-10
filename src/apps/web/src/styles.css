@@ -1,3 +1,4 @@
+
 @import url('./styles/trading-dashboard.css');
 
 :root {
@@ -2635,5 +2636,3 @@ td:first-child {
     font-size: 1.5rem;
   }
 }
-
-@import url('./styles/trading-dashboard.css');

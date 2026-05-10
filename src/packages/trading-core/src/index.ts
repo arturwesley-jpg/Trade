@@ -29,6 +29,7 @@ export * from "./paper-trading/index.js";
 // Re-export specific types to avoid conflicts
 export type { TradeMetrics, PerformanceMetrics } from "./metrics/metrics-calculator.js";
 export type { AdvancedMetrics } from "./metrics/advanced-metrics.js";
+export { MetricsCalculator } from "./metrics/metrics-calculator.js";
 
 // Type alias for PaperTradingEngine (PaperExecutor)
 export { PaperExecutor as PaperTradingEngine } from "./paper-executor.js";

@@ -1,4 +1,5 @@
 import { Telegraf } from "telegraf";
+import { createServer } from "node:http";
 import { createTelegramAccessPolicy, TelegramRateLimiter } from "./access-policy.js";
 import { fetchApi, formatError } from "./api-client.js";
 
@@ -242,8 +243,8 @@ bot.catch((error) => {
   console.error("telegram_bot_error", error);
 });
 
-await bot.launch();
-console.log("Telegram bot started in safe paper-first mode.");
+startHealthServer();
+await launchBotWithRetry();
 
 async function replyHelp(ctx: any): Promise<void> {
   await ctx.reply(
@@ -273,4 +274,47 @@ function readSymbol(text: string): string {
 
 function isAdmin(id: string | undefined): boolean {
   return accessPolicy.isAdmin(id);
+}
+
+async function launchBotWithRetry(): Promise<void> {
+  let attempt = 0;
+  while (true) {
+    try {
+      await bot.launch();
+      console.log("Telegram bot started in safe paper-first mode.");
+      return;
+    } catch (error) {
+      attempt += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      const isConflict409 = message.includes("409") || message.includes("terminated by other getUpdates request");
+      const backoffMs = Math.min(30_000, 2_000 * attempt);
+      if (isConflict409) {
+        console.warn(`Telegram polling conflict (409). Retrying in ${Math.ceil(backoffMs / 1000)}s...`);
+        await sleep(backoffMs);
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
+function startHealthServer(): void {
+  const port = Number(process.env.PORT ?? 3000);
+  const server = createServer((req, res) => {
+    if (req.url === "/health") {
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ status: "ok", service: "trade-telegram-bot" }));
+      return;
+    }
+    res.statusCode = 200;
+    res.end("ok");
+  });
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Telegram bot health server listening on :${port}`);
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

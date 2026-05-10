@@ -47,9 +47,9 @@ import {
   TimeSeriesAnalyzer,
   RiskAnalyzer,
   type TradeMetrics,
-  PaperTradingService
+  PaperTradingService,
+  MetricsCalculator
 } from "@trade/trading-core";
-import { MetricsCalculator } from "@trade/trading-core/metrics/metrics-calculator.js";
 import { DataAggregator } from "./data-aggregator.js";
 import {
   AuthService,

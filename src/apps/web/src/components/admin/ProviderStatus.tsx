@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 
 export interface ProviderHealth {
   provider: "binance" | "bybit" | "okx" | "kraken" | "bingx";

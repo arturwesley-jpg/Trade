@@ -14,8 +14,7 @@ import type { PaperOrderPayload } from "./view-model.js";
 import type {
   Backtest,
   BacktestWithMetrics,
-  CreateBacktestRequest,
-  BacktestMetricsRecord
+  CreateBacktestRequest
 } from "@trade/shared";
 import { API_BASE_URL } from "./config/api";
 
