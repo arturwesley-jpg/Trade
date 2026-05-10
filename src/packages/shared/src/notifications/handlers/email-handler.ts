@@ -1,4 +1,4 @@
-import nodemailer, { type Transporter } from "nodemailer";
+import nodemailer from "nodemailer";
 import { logger } from "../../logger.js";
 import type { NotificationHandler, NotificationMessage } from "../types.js";
 
@@ -14,7 +14,7 @@ export interface EmailConfig {
 }
 
 export class EmailHandler implements NotificationHandler {
-  private transporter: Transporter;
+  private transporter: ReturnType<typeof nodemailer.createTransport>;
   private from: string;
 
   constructor(config: EmailConfig) {
