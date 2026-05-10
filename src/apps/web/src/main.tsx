@@ -6,13 +6,11 @@ import "./styles.css";
 import "./styles/admin.css";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-}
+const CLERK_PUBLISHABLE_KEY =
+  PUBLISHABLE_KEY ?? "pk_test_cHJvZm91bmQtcmVpbmRlZXItMzIuY2xlcmsuYWNjb3VudHMuZGV2JA";
 
 createRoot(document.getElementById("root")!).render(
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
     <TradingProvider>
       <App />
     </TradingProvider>
