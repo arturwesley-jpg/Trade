@@ -5,7 +5,7 @@
  */
 
 import type { CacheClient } from '@trade/shared';
-import type { TradingSignal, SignalHistory } from './signal-types';
+import type { TradingSignal, SignalHistory } from './signal-types.js';
 
 export interface SignalCacheConfig {
   cache: CacheClient;

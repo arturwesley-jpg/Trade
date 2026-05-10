@@ -5,7 +5,7 @@
  * comprehensive trading signals with confidence scoring.
  */
 
-export * from './signal-types';
-export * from './enhanced-signal-generator';
-export * from './enhanced-signal-service';
-export * from './signal-cache';
+export * from './signal-types.js';
+export * from './enhanced-signal-generator.js';
+export * from './enhanced-signal-service.js';
+export * from './signal-cache.js';

@@ -5,8 +5,8 @@ import type { FastifyInstance } from "fastify";
 
 describe("API app", () => {
   const appsToClose: FastifyInstance[] = [];
-  const createTestApp = (overrides: Parameters<typeof buildApp>[0] = {}) => {
-    const app = buildApp({ disableRedisSubscriber: true, ...overrides });
+  const createTestApp = async (overrides: Parameters<typeof buildApp>[0] = {}) => {
+    const app = await buildApp({ disableRedisSubscriber: true, ...overrides });
     appsToClose.push(app);
     return app;
   };
@@ -16,7 +16,7 @@ describe("API app", () => {
   });
 
   it("returns health status with safe default mode", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
 
     const response = await app.inject({ method: "GET", url: "/health" });
 
@@ -29,7 +29,7 @@ describe("API app", () => {
   });
 
   it("opens an idempotent paper position", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
     const payload = {
       idempotencyKey: "api-open-1",
       symbol: "BTC-USDT",
@@ -51,7 +51,7 @@ describe("API app", () => {
   });
 
   it("rejects live orders at the API boundary", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
 
     const response = await app.inject({
       method: "POST",
@@ -79,7 +79,7 @@ describe("API app", () => {
   });
 
   it("returns structured validation errors with correlation ids", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
 
     const response = await app.inject({
       method: "POST",
@@ -106,7 +106,7 @@ describe("API app", () => {
   });
 
   it("exposes read-only intelligence endpoints with explicit simulated sources", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
 
     const providers = await app.inject({ method: "GET", url: "/providers/status" });
     const fearGreed = await app.inject({ method: "GET", url: "/fear-greed" });
@@ -131,7 +131,7 @@ describe("API app", () => {
 
   it("can reuse an injected repository across app instances", async () => {
     const repository = new InMemoryTradingRepository();
-    const firstApp = createTestApp({ repository });
+    const firstApp = await createTestApp({ repository });
     const payload = {
       idempotencyKey: "persist-api-1",
       symbol: "BTC-USDT",
@@ -144,7 +144,7 @@ describe("API app", () => {
     };
 
     await firstApp.inject({ method: "POST", url: "/orders/paper", payload });
-    const secondApp = createTestApp({ repository });
+    const secondApp = await createTestApp({ repository });
     const positions = await secondApp.inject({ method: "GET", url: "/positions" });
 
     expect(positions.json().data).toHaveLength(1);
@@ -160,7 +160,7 @@ describe("API app", () => {
       timestamp: 123,
       source: "simulated"
     });
-    const app = createTestApp({ repository });
+    const app = await createTestApp({ repository });
 
     const allTicks = await app.inject({ method: "GET", url: "/market/ticker" });
     const btcTick = await app.inject({ method: "GET", url: "/market/ticker?symbol=BTC-USDT" });
@@ -170,7 +170,7 @@ describe("API app", () => {
   });
 
   it("protects admin endpoints with a configured admin token", async () => {
-    const app = createTestApp({ adminToken: "secret-admin-token" });
+    const app = await createTestApp({ adminToken: "secret-admin-token" });
 
     const blocked = await app.inject({ method: "GET", url: "/admin/audit-logs" });
     const allowed = await app.inject({
@@ -186,7 +186,7 @@ describe("API app", () => {
   });
 
   it("exposes frontend-compatible alert, sentiment, whale, and paper summary contracts", async () => {
-    const app = createTestApp();
+    const app = await createTestApp();
 
     const alerts = await app.inject({ method: "GET", url: "/alerts" });
     const sentiment = await app.inject({ method: "GET", url: "/sentiment/fear-greed" });

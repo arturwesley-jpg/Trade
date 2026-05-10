@@ -8,8 +8,8 @@
 import type { Candle } from '@trade/market-data';
 import type { Signal } from '@trade/database';
 import { PostgresSignalRepository } from '@trade/database';
-import { SignalAggregator, type AggregatedSignal } from './signal-aggregator';
-import { SignalExplanationGenerator, type SignalExplanation } from './signal-explanation';
+import { SignalAggregator, type AggregatedSignal } from './signal-aggregator.js';
+import { SignalExplanationGenerator, type SignalExplanation } from './signal-explanation.js';
 
 export interface SignalWithExplanation extends Signal {
   explanation: SignalExplanation;

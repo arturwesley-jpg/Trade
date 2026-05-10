@@ -9,9 +9,9 @@ import type { Signal as DBSignal } from '@trade/database';
 import { PostgresSignalRepository } from '@trade/database';
 import type { AggregatedSentiment } from '@trade/shared';
 import { CacheClient } from '@trade/shared';
-import { EnhancedSignalGenerator, type EnhancedSignalGeneratorConfig } from './enhanced-signal-generator';
-import { SignalCache, type SignalCacheConfig } from './signal-cache';
-import type { TradingSignal, SignalHistory, SignalGenerationOptions } from './signal-types';
+import { EnhancedSignalGenerator, type EnhancedSignalGeneratorConfig } from './enhanced-signal-generator.js';
+import { SignalCache, type SignalCacheConfig } from './signal-cache.js';
+import type { TradingSignal, SignalHistory, SignalGenerationOptions } from './signal-types.js';
 
 export interface SentimentService {
   getSentiment(symbol: string): Promise<AggregatedSentiment>;

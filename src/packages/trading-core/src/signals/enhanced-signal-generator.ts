@@ -25,7 +25,7 @@ import type {
   SignalStrength,
   SignalGenerationOptions,
   IndicatorSignal,
-} from './signal-types';
+} from './signal-types.js';
 
 export interface EnhancedSignalGeneratorConfig {
   sentimentWeight?: number; // 0-1, default 0.3

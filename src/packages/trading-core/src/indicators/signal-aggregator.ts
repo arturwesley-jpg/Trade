@@ -21,7 +21,7 @@ import {
   ADXCalculator,
   ATRCalculator,
   SupportResistanceDetector,
-} from './index';
+} from './index.js';
 
 export interface AggregatedSignal {
   symbol: string;

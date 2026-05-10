@@ -5,7 +5,7 @@
  * based on technical indicator analysis.
  */
 
-import type { AggregatedSignal } from './signal-aggregator';
+import type { AggregatedSignal } from './signal-aggregator.js';
 
 export interface SignalExplanation {
   summary: string;
