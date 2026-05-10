@@ -8,7 +8,7 @@ services:
     branch: main
     repo: https://github.com/arturwesley-jpg/Trade.git
     buildCommand: npm install --legacy-peer-deps && npm run build -w src/packages/database && npm run build -w src/packages/shared && npm run build -w src/packages/trading-core && npm run build -w src/packages/exchange && npm run build -w src/packages/sentiment && npm run build -w src/apps/api
-    startCommand: node src/apps/api/dist/main.js
+    startCommand: node src/apps/api/dist/server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

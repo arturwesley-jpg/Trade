@@ -35,7 +35,6 @@ import { ErrorBoundary } from "./components/ErrorBoundary.js";
 import { ToastContainer, useToast } from "./components/Toast.js";
 import { LoginPage } from "./components/LoginPage.js";
 import { useTrading } from "./contexts/TradingContext.js";
-import { MarketDataWebSocket } from "./services/websocket.js";
 
 // Lazy load Analytics and Admin pages for better performance
 const AnalyticsPage = lazy(() => import("./components/AnalyticsPage.js").then(m => ({ default: m.AnalyticsPage })));
@@ -245,41 +244,6 @@ const TradingHub = memo(function TradingHub({
   const refreshId = useRef(0);
   const toast = useToast();
   const trading = useTrading();
-  const marketDataWsRef = useRef<MarketDataWebSocket | null>(null);
-
-  // WebSocket connection for market data
-  useEffect(() => {
-    const wsUrl = apiBaseUrl.replace(/^http/, "ws") + "/market-data";
-
-    const marketDataWs = new MarketDataWebSocket({
-      url: wsUrl,
-      onCandle: (candle) => {
-        trading.addCandle(candle);
-      },
-      onError: (error) => {
-        console.error("[TradingHub] Market data WebSocket error:", error);
-        toast.error(`WebSocket error: ${error.message}`);
-      },
-      onStateChange: (state) => {
-        const statusMap: Record<typeof state, WebSocketStatus> = {
-          disconnected: "disconnected",
-          connecting: "connecting",
-          connected: "connected",
-          reconnecting: "connecting",
-          error: "disconnected"
-        };
-        setWsStatus(statusMap[state]);
-      }
-    });
-
-    marketDataWs.connect();
-    marketDataWsRef.current = marketDataWs;
-
-    return () => {
-      marketDataWs.disconnect();
-      marketDataWsRef.current = null;
-    };
-  }, [trading, toast]);
 
   // Legacy WebSocket for signals and positions
   const wsUrl = apiBaseUrl.replace(/^http/, "ws") + "/ws";
