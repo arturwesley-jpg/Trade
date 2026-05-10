@@ -16,13 +16,9 @@ services:
       - key: PORT
         value: "3001"
       - key: DATABASE_URL
-        fromDatabase:
-          name: trade-postgres
-          property: connectionString
+        value: "postgresql://neondb_owner:npg_O7sUaQCKGxd0@ep-steep-recipe-act5h1g3.sa-east-1.aws.neon.tech/neondb?sslmode=require"
       - key: REDIS_URL
-        fromDatabase:
-          name: trade-redis
-          property: connectionString
+        value: "redis://default:gQAAAAAAAdatAAIgcDJlY2JhOWQzOGJhYWQ0MDI5YTU5MzM4NWM4Mzg4OTFlMA@steady-bobcat-120493.upstash.io:6379"
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -34,9 +30,9 @@ services:
       - key: BINANCE_API_SECRET
         sync: false
       - key: TELEGRAM_BOT_TOKEN
-        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
+        sync: false
       - key: TELEGRAM_CHAT_ID
-        value: "274321499"
+        sync: false
       - key: SENTRY_DSN
         sync: false
       - key: LOG_LEVEL
@@ -57,22 +53,18 @@ services:
       - key: NODE_ENV
         value: production
       - key: TELEGRAM_BOT_TOKEN
-        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
+        sync: false
       - key: TELEGRAM_ALLOWED_USER_IDS
-        value: "274321499"
+        sync: false
       - key: API_BASE_URL
         fromService:
           name: trade-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
       - key: DATABASE_URL
-        fromDatabase:
-          name: trade-postgres
-          property: connectionString
+        value: "postgresql://neondb_owner:npg_O7sUaQCKGxd0@ep-steep-recipe-act5h1g3.sa-east-1.aws.neon.tech/neondb?sslmode=require"
       - key: REDIS_URL
-        fromDatabase:
-          name: trade-redis
-          property: connectionString
+        value: "redis://default:gQAAAAAAAdatAAIgcDJlY2JhOWQzOGJhYWQ0MDI5YTU5MzM4NWM4Mzg4OTFlMA@steady-bobcat-120493.upstash.io:6379"
       - key: JWT_SECRET
         generateValue: true
       - key: ENCRYPTION_KEY
@@ -82,16 +74,3 @@ services:
           name: trade-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
-
-databases:
-  - name: trade-postgres
-    databaseName: trade
-    user: trade
-    plan: basic-1gb
-    region: oregon
-    ipAllowList: []
-
-  - name: trade-redis
-    plan: basic-256mb
-    region: oregon
-    ipAllowList: []
