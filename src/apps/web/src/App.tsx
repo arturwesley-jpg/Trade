@@ -173,6 +173,7 @@ const backendPhases = [
 
 export function App() {
   const [activeRoute, setActiveRoute] = useState<AppRoute>(() => appRouteFromHash());
+  const [demoAccess, setDemoAccess] = useState<boolean>(() => sessionStorage.getItem("demoAccess") === "1");
   const { isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
@@ -203,8 +204,11 @@ export function App() {
     );
   }
 
-  if (!isSignedIn) {
-    return <LoginPage />;
+  if (!isSignedIn && !demoAccess) {
+    return <LoginPage onEnterDemo={() => {
+      sessionStorage.setItem("demoAccess", "1");
+      setDemoAccess(true);
+    }} />;
   }
 
   if (activeRoute === "landing") {

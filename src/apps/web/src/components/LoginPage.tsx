@@ -1,6 +1,6 @@
 import { SignIn } from "@clerk/clerk-react";
 
-export function LoginPage() {
+export function LoginPage({ onEnterDemo }: { onEnterDemo: () => void }) {
   return (
     <main className="login-shell">
       <div className="login-background" aria-hidden="true">
@@ -21,6 +21,9 @@ export function LoginPage() {
             forceRedirectUrl="/#dashboard"
             signUpForceRedirectUrl="/#dashboard"
           />
+          <button className="ghost-button" type="button" onClick={onEnterDemo}>
+            Entrar em modo teste (sem login)
+          </button>
         </div>
 
         <div className="login-footer">
