@@ -50,7 +50,11 @@ const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const NEWS_CACHE_TTL_MS = 3 * 60 * 1000;
+const SIGNALS_CACHE_TTL_MS = 60 * 1000;
+const WHALES_CACHE_TTL_MS = 45 * 1000;
 let newsCache: { data: NewsIntelligenceSnapshot; updatedAt: number } | null = null;
+let signalsCache: { data: TradingSignal[]; updatedAt: number } | null = null;
+let whalesCache: { data: WhaleEvent[]; updatedAt: number } | null = null;
 
 export async function fetchHealth() {
   return requestJson<Health>("/health");
@@ -65,7 +69,18 @@ export async function fetchMarketTicks() {
 }
 
 export async function fetchSignals() {
-  return requestJson<TradingSignal[]>("/signals");
+  if (signalsCache && Date.now() - signalsCache.updatedAt < SIGNALS_CACHE_TTL_MS) {
+    return signalsCache.data;
+  }
+  try {
+    const data = await requestJson<TradingSignal[]>("/signals");
+    signalsCache = { data, updatedAt: Date.now() };
+    return data;
+  } catch {
+    const data = await fetchSignalsFromBinance();
+    signalsCache = { data, updatedAt: Date.now() };
+    return data;
+  }
 }
 
 export async function fetchProviderStatuses() {
@@ -85,7 +100,18 @@ export async function fetchSentimentSnapshot() {
 }
 
 export async function fetchWhaleEvents() {
-  return requestJson<WhaleEvent[]>("/whales/events");
+  if (whalesCache && Date.now() - whalesCache.updatedAt < WHALES_CACHE_TTL_MS) {
+    return whalesCache.data;
+  }
+  try {
+    const data = await requestJson<WhaleEvent[]>("/whales/events");
+    whalesCache = { data, updatedAt: Date.now() };
+    return data;
+  } catch {
+    const data = await fetchWhaleEventsFromBinance();
+    whalesCache = { data, updatedAt: Date.now() };
+    return data;
+  }
 }
 
 export async function fetchPaperSummary() {
@@ -367,4 +393,119 @@ async function fetchNewsIntelligenceFromPublicFeeds(): Promise<NewsIntelligenceS
     topSignals: items.slice(0, 5).map((x) => `${x.source}: ${x.title}`),
     items
   };
+}
+
+async function fetchSignalsFromBinance(): Promise<TradingSignal[]> {
+  const symbols = ["BTCUSDT", "ETHUSDT"];
+  const now = Date.now();
+
+  const rows = await Promise.all(
+    symbols.map(async (symbol) => {
+      const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=80`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch klines for ${symbol}`);
+      }
+      const klines = await response.json() as Array<[number, string, string, string, string, string]>;
+      const closes = klines.map((k) => Number(k[4]));
+      const current = closes[closes.length - 1] ?? 0;
+      const prev = closes[closes.length - 2] ?? current;
+      const changePct = prev > 0 ? ((current - prev) / prev) * 100 : 0;
+      const sma20 = average(closes.slice(-20));
+      const sma50 = average(closes.slice(-50));
+      const rsi14 = computeRsi(closes.slice(-15));
+
+      const bullishSignals = Number(current > sma20) + Number(sma20 > sma50) + Number(rsi14 > 52) + Number(changePct > 0);
+      const bearishSignals = 4 - bullishSignals;
+      const direction: TradingSignal["direction"] = bullishSignals >= 3 ? "WATCH_LONG" : "NEUTRAL";
+      const confidenceValue = Math.max(0, Math.min(1, 0.45 + bullishSignals * 0.12 - bearishSignals * 0.04));
+      const confidence: TradingSignal["confidence"] =
+        confidenceValue >= 0.75 ? "high" : confidenceValue >= 0.55 ? "medium" : "low";
+
+      return {
+        id: `binance-${symbol}-${now}`,
+        symbol: symbol.replace("USDT", "-USDT"),
+        direction,
+        confidence,
+        priceChangePct: Number(changePct.toFixed(3)),
+        shouldExecute: false,
+        rationale: `Confluencia: preco ${current > sma20 ? "acima" : "abaixo"} da SMA20, SMA20 ${sma20 > sma50 ? "acima" : "abaixo"} da SMA50, RSI ${rsi14.toFixed(1)}.`,
+        createdAt: new Date(now).toISOString(),
+        status: direction === "WATCH_LONG" ? "PRECO VALIDADO" : "SEM SINAL",
+        reason: direction === "WATCH_LONG" ? "Confluencia tecnica favoravel (Binance 15m)" : "Confluencia incompleta"
+      } satisfies TradingSignal;
+    })
+  );
+
+  return rows;
+}
+
+async function fetchWhaleEventsFromBinance(): Promise<WhaleEvent[]> {
+  const symbols = ["BTCUSDT", "ETHUSDT"];
+  const minNotional = 500_000;
+
+  const events = (
+    await Promise.all(
+      symbols.map(async (symbol) => {
+        const response = await fetch(`https://api.binance.com/api/v3/aggTrades?symbol=${symbol}&limit=1000`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch aggTrades for ${symbol}`);
+        }
+        const trades = await response.json() as Array<{
+          a: number; // agg id
+          p: string; // price
+          q: string; // qty
+          T: number; // time
+          m: boolean; // buyer maker
+        }>;
+
+        return trades
+          .map((t) => {
+            const price = Number(t.p);
+            const qty = Number(t.q);
+            const valueUsd = price * qty;
+            if (!Number.isFinite(valueUsd) || valueUsd < minNotional) {
+              return null;
+            }
+            const severity: WhaleEvent["severity"] = valueUsd >= 5_000_000 ? "high" : valueUsd >= 1_500_000 ? "medium" : "low";
+            const type: WhaleEvent["type"] = t.m ? "DISTRIBUTION" : "ACCUMULATION";
+            return {
+              id: `${symbol}-${t.a}`,
+              type,
+              symbol: symbol.replace("USDT", "-USDT"),
+              valueUsd,
+              severity,
+              source: "external" as const,
+              timestamp: new Date(t.T).toISOString()
+            } satisfies WhaleEvent;
+          })
+          .filter((x): x is WhaleEvent => x !== null);
+      })
+    )
+  )
+    .flat()
+    .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+    .slice(0, 40);
+
+  return events;
+}
+
+function average(values: number[]): number {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function computeRsi(closes: number[]): number {
+  if (closes.length < 2) return 50;
+  let gains = 0;
+  let losses = 0;
+  for (let i = 1; i < closes.length; i += 1) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
+  }
+  const avgGain = gains / (closes.length - 1);
+  const avgLoss = losses / (closes.length - 1);
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
 }
