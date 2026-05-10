@@ -91,7 +91,11 @@ export async function fetchPaperSummary() {
 }
 
 export async function fetchNewsIntelligence() {
-  return requestJson<NewsIntelligenceSnapshot>("/market/news-intelligence");
+  try {
+    return await requestJson<NewsIntelligenceSnapshot>("/market/news-intelligence");
+  } catch {
+    return fetchNewsIntelligenceFromPublicFeeds();
+  }
 }
 
 export async function openPaperOrder(payload: PaperOrderPayload) {
@@ -261,4 +265,98 @@ async function fetchMarketTicksFromBinance(): Promise<MarketTick[]> {
     timestamp: ticker.closeTime ?? Date.now(),
     source: "binance" as const
   }));
+}
+
+async function fetchNewsIntelligenceFromPublicFeeds(): Promise<NewsIntelligenceSnapshot> {
+  const feeds: Array<{ source: string; url: string }> = [
+    { source: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
+    { source: "Cointelegraph", url: "https://cointelegraph.com/rss" },
+    { source: "Decrypt", url: "https://decrypt.co/feed" },
+    { source: "The Block", url: "https://www.theblock.co/rss.xml" },
+    { source: "Bitcoin Magazine", url: "https://bitcoinmagazine.com/.rss/full/" },
+    { source: "BeInCrypto", url: "https://beincrypto.com/feed/" },
+    { source: "NewsBTC", url: "https://www.newsbtc.com/feed/" },
+    { source: "CryptoSlate", url: "https://cryptoslate.com/feed/" },
+    { source: "AMBCrypto", url: "https://ambcrypto.com/feed/" },
+    { source: "U.Today", url: "https://u.today/rss" },
+    { source: "Blockworks", url: "https://blockworks.co/feed/" },
+    { source: "Messari", url: "https://messari.io/rss" }
+  ];
+
+  const bullish = ["surge", "rally", "breakout", "bullish", "approval", "adoption", "inflow", "accumulation", "ath", "recovery"];
+  const bearish = ["crash", "dump", "selloff", "bearish", "outflow", "liquidation", "hack", "ban", "lawsuit", "decline"];
+
+  function scoreTitle(title: string): { sentiment: "BULLISH" | "BEARISH" | "NEUTRAL"; score: number } {
+    const t = title.toLowerCase();
+    let score = 0;
+    for (const k of bullish) if (t.includes(k)) score += 12;
+    for (const k of bearish) if (t.includes(k)) score -= 12;
+    if (score >= 15) return { sentiment: "BULLISH", score: Math.min(100, score) };
+    if (score <= -15) return { sentiment: "BEARISH", score: Math.max(-100, score) };
+    return { sentiment: "NEUTRAL", score };
+  }
+
+  const parser = new DOMParser();
+  const articles = (
+    await Promise.all(
+      feeds.map(async (feed) => {
+        try {
+          const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.url)}`;
+          const response = await fetch(proxied);
+          if (!response.ok) return [];
+          const xml = await response.text();
+          const doc = parser.parseFromString(xml, "text/xml");
+          const items = Array.from(doc.querySelectorAll("item")).slice(0, 4);
+          return items.map((item) => {
+            const title = item.querySelector("title")?.textContent?.trim() ?? `${feed.source} update`;
+            const link = item.querySelector("link")?.textContent?.trim() ?? "";
+            const publishedRaw = item.querySelector("pubDate")?.textContent?.trim() ?? new Date().toISOString();
+            const parsedDate = Date.parse(publishedRaw);
+            const publishedAt = Number.isNaN(parsedDate) ? new Date().toISOString() : new Date(parsedDate).toISOString();
+            const scored = scoreTitle(title);
+            return {
+              title,
+              link,
+              source: feed.source,
+              publishedAt,
+              sentiment: scored.sentiment,
+              score: scored.score
+            };
+          });
+        } catch {
+          return [];
+        }
+      })
+    )
+  ).flat();
+
+  const dedup = new Map<string, (typeof articles)[number]>();
+  for (const article of articles) {
+    const key = article.link || `${article.source}:${article.title}`;
+    if (!dedup.has(key)) dedup.set(key, article);
+  }
+  const items = Array.from(dedup.values())
+    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt))
+    .slice(0, 40);
+
+  const bullishCount = items.filter((x) => x.sentiment === "BULLISH").length;
+  const bearishCount = items.filter((x) => x.sentiment === "BEARISH").length;
+  const neutralCount = items.filter((x) => x.sentiment === "NEUTRAL").length;
+  const averageScore = items.length ? items.reduce((sum, x) => sum + x.score, 0) / items.length : 0;
+  const sentiment: "BULLISH" | "BEARISH" | "NEUTRAL" = averageScore >= 10 ? "BULLISH" : averageScore <= -10 ? "BEARISH" : "NEUTRAL";
+  const confidence = Math.min(100, Math.round((Math.abs(averageScore) + items.length) * 1.6));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    channelCount: feeds.length,
+    totalArticles: items.length,
+    sentiment,
+    confidence,
+    bullishCount,
+    bearishCount,
+    neutralCount,
+    averageScore: Number(averageScore.toFixed(2)),
+    topSignals: items.slice(0, 5).map((x) => `${x.source}: ${x.title}`),
+    items
+  };
 }
