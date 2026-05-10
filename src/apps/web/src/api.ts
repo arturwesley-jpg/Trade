@@ -49,6 +49,8 @@ export interface PerformanceMetrics {
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 const REQUEST_TIMEOUT = 30000; // 30 seconds
+const NEWS_CACHE_TTL_MS = 3 * 60 * 1000;
+let newsCache: { data: NewsIntelligenceSnapshot; updatedAt: number } | null = null;
 
 export async function fetchHealth() {
   return requestJson<Health>("/health");
@@ -91,10 +93,18 @@ export async function fetchPaperSummary() {
 }
 
 export async function fetchNewsIntelligence() {
+  if (newsCache && Date.now() - newsCache.updatedAt < NEWS_CACHE_TTL_MS) {
+    return newsCache.data;
+  }
+
   try {
-    return await requestJson<NewsIntelligenceSnapshot>("/market/news-intelligence");
+    const data = await requestJson<NewsIntelligenceSnapshot>("/market/news-intelligence");
+    newsCache = { data, updatedAt: Date.now() };
+    return data;
   } catch {
-    return fetchNewsIntelligenceFromPublicFeeds();
+    const data = await fetchNewsIntelligenceFromPublicFeeds();
+    newsCache = { data, updatedAt: Date.now() };
+    return data;
   }
 }
 
@@ -296,21 +306,19 @@ async function fetchNewsIntelligenceFromPublicFeeds(): Promise<NewsIntelligenceS
     return { sentiment: "NEUTRAL", score };
   }
 
-  const parser = new DOMParser();
   const articles = (
     await Promise.all(
       feeds.map(async (feed) => {
         try {
-          const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.url)}`;
+          const proxied = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`;
           const response = await fetch(proxied);
           if (!response.ok) return [];
-          const xml = await response.text();
-          const doc = parser.parseFromString(xml, "text/xml");
-          const items = Array.from(doc.querySelectorAll("item")).slice(0, 4);
+          const payload = await response.json() as { items?: Array<{ title?: string; link?: string; pubDate?: string }> };
+          const items = (payload.items ?? []).slice(0, 4);
           return items.map((item) => {
-            const title = item.querySelector("title")?.textContent?.trim() ?? `${feed.source} update`;
-            const link = item.querySelector("link")?.textContent?.trim() ?? "";
-            const publishedRaw = item.querySelector("pubDate")?.textContent?.trim() ?? new Date().toISOString();
+            const title = item.title?.trim() ?? `${feed.source} update`;
+            const link = item.link?.trim() ?? "";
+            const publishedRaw = item.pubDate?.trim() ?? new Date().toISOString();
             const parsedDate = Date.parse(publishedRaw);
             const publishedAt = Number.isNaN(parsedDate) ? new Date().toISOString() : new Date(parsedDate).toISOString();
             const scored = scoreTitle(title);
