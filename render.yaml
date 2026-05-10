@@ -16,7 +16,7 @@ services:
       - key: PORT
         value: "3001"
       - key: DATABASE_URL
-        value: "postgresql://postgres:Furia%40090186@db.uwjdahqmhwhrnvqkefuy.supabase.co:5432/postgres"
+        value: "postgresql://postgres:Furia%40090186@db.fzwwqjetueqimwioaksf.supabase.co:5432/postgres"
       - key: REDIS_URL
         value: "redis://default:gQAAAAAAAdatAAIgcDJlY2JhOWQzOGJhYWQ0MDI5YTU5MzM4NWM4Mzg4OTFlMA@steady-bobcat-120493.upstash.io:6379"
       - key: JWT_SECRET
@@ -62,7 +62,7 @@ services:
           type: web
           envVarKey: RENDER_EXTERNAL_URL
       - key: DATABASE_URL
-        value: "postgresql://postgres:Furia%40090186@db.uwjdahqmhwhrnvqkefuy.supabase.co:5432/postgres"
+        value: "postgresql://postgres:Furia%40090186@db.fzwwqjetueqimwioaksf.supabase.co:5432/postgres"
       - key: REDIS_URL
         value: "redis://default:gQAAAAAAAdatAAIgcDJlY2JhOWQzOGJhYWQ0MDI5YTU5MzM4NWM4Mzg4OTFlMA@steady-bobcat-120493.upstash.io:6379"
       - key: JWT_SECRET
