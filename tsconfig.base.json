@@ -10,9 +10,20 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@trade/shared": ["src/packages/shared/src/index.ts"],
       "@trade/shared/*": ["src/packages/shared/src/*"],
+      "@trade/trading-core": ["src/packages/trading-core/src/index.ts"],
       "@trade/trading-core/*": ["src/packages/trading-core/src/*"],
-      "@trade/exchange/*": ["src/packages/exchange/src/*"]
+      "@trade/exchange": ["src/packages/exchange/src/index.ts"],
+      "@trade/exchange/*": ["src/packages/exchange/src/*"],
+      "@trade/sentiment": ["src/packages/sentiment/src/index.ts"],
+      "@trade/sentiment/*": ["src/packages/sentiment/src/*"],
+      "@trade/database": ["src/packages/database/src/index.ts"],
+      "@trade/database/*": ["src/packages/database/src/*"],
+      "@trade/market-data": ["src/packages/market-data/src/index.ts"],
+      "@trade/market-data/*": ["src/packages/market-data/src/*"],
+      "@trade/data-export": ["src/packages/data-export/src/index.ts"],
+      "@trade/data-export/*": ["src/packages/data-export/src/*"]
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@trading-bot/database",
+  "name": "@trade/database",
   "version": "1.0.0",
   "description": "Database layer for Trading Bot",
   "main": "dist/index.js",

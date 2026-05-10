@@ -214,7 +214,7 @@ export class EnhancedSignalService {
 
     // Fallback to database
     const dbSignals = await this.signalRepository.findBySymbol(symbol, limit);
-    const signals = dbSignals.map(s => this.mapDBSignalToTradingSignal(s));
+    const signals = dbSignals.map((s: DBSignal) => this.mapDBSignalToTradingSignal(s));
 
     const history: SignalHistory = {
       signals,
