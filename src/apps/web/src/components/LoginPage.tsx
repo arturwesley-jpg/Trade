@@ -14,6 +14,9 @@ export function LoginPage({ onEnterDemo }: { onEnterDemo: () => void }) {
           <h1>Crypto Sentinel</h1>
           <p>Central de inteligência para trading cripto</p>
         </div>
+        <button className="primary-action" type="button" onClick={onEnterDemo}>
+          Acessar modo teste agora
+        </button>
 
         <div className="login-form">
           <SignIn
