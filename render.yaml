@@ -30,9 +30,9 @@ services:
       - key: BINANCE_API_SECRET
         sync: false
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
       - key: TELEGRAM_CHAT_ID
-        sync: false
+        value: "274321499"
       - key: SENTRY_DSN
         sync: false
       - key: LOG_LEVEL
@@ -53,9 +53,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: "8587503135:AAFN23HRghh2ofOa9GHZ_yQC4BBoG6z6ClQ"
       - key: TELEGRAM_ALLOWED_USER_IDS
-        sync: false
+        value: "274321499"
       - key: API_BASE_URL
         fromService:
           name: trade-api

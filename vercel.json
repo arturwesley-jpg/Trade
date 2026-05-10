@@ -1,41 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm run build -w src/packages/shared && npm run build -w src/packages/trading-core && npm run build -w src/packages/exchange && npm run build -w src/apps/web",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "cd src/apps/web && npx vite build",
   "outputDirectory": "src/apps/web/dist",
-  "framework": "vite",
-  "installCommand": "npm install --legacy-peer-deps",
-  "devCommand": "npm run dev -w src/apps/web",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "ignoreCommand": "bash -c 'git diff HEAD^ HEAD --quiet -- src/apps/web src/packages || exit 1'",
-  "build": {
-    "env": {
-      "NODE_OPTIONS": "--max-old-space-size=4096"
-    }
-  },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/assets/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "dest": "/assets/$1"
+      "source": "/api/(.*)",
+      "destination": "https://trade-api.onrender.com/api/$1"
     },
     {
-      "src": "/(.*)\\.js",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*)\\.css",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/ws",
+      "destination": "wss://trade-api.onrender.com/ws"
     }
   ],
   "headers": [
@@ -57,12 +32,12 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_BASE_URL": "https://trade-api.onrender.com",
+    "VITE_API_WS_URL": "wss://trade-api.onrender.com"
+  }
 }
