@@ -1,7 +1,8 @@
 {
-  "name": "@trading-bot/sentiment",
+  "name": "@trade/sentiment",
   "version": "1.0.0",
   "description": "Sentiment analysis and news aggregation for trading bot",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

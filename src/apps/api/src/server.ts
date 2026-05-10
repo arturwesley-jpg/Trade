@@ -12,6 +12,8 @@ import { MarketStreamService } from "./services/market-stream.js";
 
 const host = process.env.API_HOST ?? "0.0.0.0";
 const port = Number(process.env.API_PORT ?? process.env.PORT ?? 4000);
+const redisPubSubEnabled = process.env.REDIS_PUBSUB_ENABLED !== "false";
+const hasRedisUrl = typeof process.env.REDIS_URL === "string" && process.env.REDIS_URL.trim().length > 0;
 
 // Initialize logger for API service
 logger.setContext({ service: "api" });
@@ -65,7 +67,8 @@ const app = await buildApp({
   pgClient,
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret-change-in-production",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-in-production",
-  cryptoPanicApiKey: process.env.CRYPTOPANIC_API_KEY
+  cryptoPanicApiKey: process.env.CRYPTOPANIC_API_KEY,
+  disableRedisSubscriber: !redisPubSubEnabled || !hasRedisUrl
 });
 
 // Initialize WebSocket server (before starting HTTP server)
@@ -105,7 +108,7 @@ if (!useSimulatedMarket) {
     primaryExchange: (process.env.PRIMARY_EXCHANGE as any) ?? "binance",
     enableMultiSource: process.env.ENABLE_MULTI_SOURCE === "true",
     cacheSize: Number(process.env.MARKET_CACHE_SIZE ?? 100),
-    redisPubSub: process.env.REDIS_PUBSUB_ENABLED !== "false",
+    redisPubSub: redisPubSubEnabled && hasRedisUrl,
     onConsensusTick: (tick) => tradingStream.updateMarketPrice(tick)
   });
 
