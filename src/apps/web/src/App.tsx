@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, memo, type CSSProperties } from "react";
+import { useClerk, useUser } from "@clerk/clerk-react";
 import type { AlertEvent, MarketTick, PaperSummary, Position, ProviderStatusSnapshot, SentimentSnapshot, TradingSignal, WhaleEvent } from "./shared-types.js";
 import {
   fetchAlerts,
@@ -32,7 +33,6 @@ import { useWebSocket, type WebSocketStatus } from "./websocket-client.js";
 import { apiBaseUrl } from "./api.js";
 import { ErrorBoundary } from "./components/ErrorBoundary.js";
 import { ToastContainer, useToast } from "./components/Toast.js";
-import { useAuth } from "./contexts/AuthContext.js";
 import { LoginPage } from "./components/LoginPage.js";
 import { useTrading } from "./contexts/TradingContext.js";
 import { MarketDataWebSocket } from "./services/websocket.js";
@@ -173,7 +173,7 @@ const backendPhases = [
 
 export function App() {
   const [activeRoute, setActiveRoute] = useState<AppRoute>(() => appRouteFromHash());
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
     const handleLocationChange = () => setActiveRoute(appRouteFromHash());
@@ -192,7 +192,7 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <main className="app-shell">
         <BackgroundField />
@@ -203,7 +203,7 @@ export function App() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return <LoginPage />;
   }
 
@@ -808,7 +808,8 @@ function TopNav({
   onTogglePolling: () => void;
   wsStatus: WebSocketStatus;
 }) {
-  const { user, logout } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <nav className="top-nav" aria-label="Navegacao principal">
@@ -836,14 +837,14 @@ function TopNav({
         <span className={`ws-state ${wsStatus === "connected" ? "ws-connected" : "ws-disconnected"}`}>
           WS {wsStatus === "connected" ? "conectado" : wsStatus === "connecting" ? "conectando..." : "desconectado"}
         </span>
-        {user && <span className="user-badge">{user.name || user.email}</span>}
+        {user && <span className="user-badge">{user.fullName || user.primaryEmailAddress?.emailAddress || user.id}</span>}
         <button className="ghost-button command-trigger" onClick={onOpenCommand} type="button">
           Ctrl K
         </button>
         <button className="ghost-button" onClick={onTogglePolling} type="button">
           {isPollingPaused ? "Retomar updates" : "Pausar updates"}
         </button>
-        <button className="ghost-button" onClick={() => void logout()} type="button">
+        <button className="ghost-button" onClick={() => void signOut()} type="button">
           Sair
         </button>
       </div>

@@ -38,6 +38,7 @@
   ],
   "env": {
     "VITE_API_BASE_URL": "https://trade-api.onrender.com",
-    "VITE_API_WS_URL": "wss://trade-api.onrender.com"
+    "VITE_API_WS_URL": "wss://trade-api.onrender.com",
+    "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_cHJvZm91bmQtcmVpbmRlZXItMzIuY2xlcmsuYWNjb3VudHMuZGV2JA"
   }
 }
