@@ -10,10 +10,10 @@ import type {
   SocialSentiment,
   WhaleActivity,
   AggregatedSentiment,
-} from './types';
-import { CryptoPanicProvider } from './providers/cryptopanic.provider';
-import { FearGreedProvider } from './providers/fear-greed.provider';
-import { SentimentAggregator } from './aggregator/sentiment-aggregator';
+} from './types.js';
+import { CryptoPanicProvider } from './providers/cryptopanic.provider.js';
+import { FearGreedProvider } from './providers/fear-greed.provider.js';
+import { SentimentAggregator } from './aggregator/sentiment-aggregator.js';
 
 export interface SentimentServiceConfig {
   cryptoPanicApiKey?: string;

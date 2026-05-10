@@ -5,9 +5,9 @@
  * Correlates whale movements with price action
  */
 
-import { WhaleTracker } from '../providers/whale-tracker';
+import { WhaleTracker } from '../providers/whale-tracker.js';
 import type { PostgresWhaleEventRepository } from '@trade/database';
-import type { WhaleActivity } from '../types';
+import type { WhaleActivity } from '../types.js';
 import { logger } from '@trade/shared';
 
 export interface WhaleEventProcessorConfig {
