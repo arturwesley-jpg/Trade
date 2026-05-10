@@ -441,7 +441,7 @@ async function fetchSignalsFromBinance(): Promise<TradingSignal[]> {
 
 async function fetchWhaleEventsFromBinance(): Promise<WhaleEvent[]> {
   const symbols = ["BTCUSDT", "ETHUSDT"];
-  const minNotional = 500_000;
+  const minNotional = 100_000;
 
   const events = (
     await Promise.all(
@@ -466,7 +466,7 @@ async function fetchWhaleEventsFromBinance(): Promise<WhaleEvent[]> {
             if (!Number.isFinite(valueUsd) || valueUsd < minNotional) {
               return null;
             }
-            const severity: WhaleEvent["severity"] = valueUsd >= 5_000_000 ? "high" : valueUsd >= 1_500_000 ? "medium" : "low";
+            const severity: WhaleEvent["severity"] = valueUsd >= 3_000_000 ? "high" : valueUsd >= 750_000 ? "medium" : "low";
             const type: WhaleEvent["type"] = t.m ? "DISTRIBUTION" : "ACCUMULATION";
             return {
               id: `${symbol}-${t.a}`,
