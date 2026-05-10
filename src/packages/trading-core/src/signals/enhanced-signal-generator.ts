@@ -17,8 +17,8 @@ import {
   ATRCalculator,
   SupportResistanceDetector,
   type AggregatedSignal,
-} from '../indicators';
-import { SignalAggregator } from '../indicators/signal-aggregator';
+} from '../indicators/index.js';
+import { SignalAggregator } from '../indicators/signal-aggregator.js';
 import type {
   TradingSignal,
   SignalType,
