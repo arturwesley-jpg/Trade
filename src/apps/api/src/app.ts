@@ -1184,11 +1184,8 @@ export async function buildApp(options: AppOptions = {}) {
     registerPaperTradingRoutes(app, { paperTradingService });
   }
 
-  // Register tax reporting routes
-  const taxRoutes = await import("./routes/tax.js");
-  app.register(async (instance) => {
-    instance.register(taxRoutes.default as any, { prefix: "/api/tax" });
-  });
+  // Tax/ML routes are temporarily disabled in production build
+  // to keep the API deployment stable while those modules are being hardened.
 
   return app;
 }

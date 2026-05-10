@@ -31,7 +31,7 @@ export class JwtService {
 
     return jwt.sign(payload, this.accessTokenSecret, {
       expiresIn: this.accessTokenExpiresIn
-    } as jwt.SignOptions);
+    });
   }
 
   generateRefreshToken(): string {

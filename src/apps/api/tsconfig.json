@@ -16,6 +16,8 @@
     "src/**/*.test.ts",
     "src/examples/**/*.ts",
     "src/server.ts",
+    "src/routes/ml.ts",
+    "src/routes/tax.ts",
     "src/websocket.ts",
     "src/monitoring-setup.ts",
     "src/services/market-stream.ts",

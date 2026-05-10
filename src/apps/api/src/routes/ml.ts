@@ -19,7 +19,7 @@ const router = Router();
 const modelManager = new ModelManager('./models');
 
 // Initialize model manager
-modelManager.initialize().catch(err => {
+modelManager.initialize().catch((err: unknown) => {
   logger.error('Failed to initialize model manager', { error: err });
 });
 
