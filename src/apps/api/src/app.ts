@@ -67,6 +67,7 @@ import { registerSentimentRoutes } from "./routes/sentiment.js";
 import { registerWhaleRoutes } from "./routes/whale.js";
 import { SentimentService } from "@trade/sentiment";
 import type { Client } from "pg";
+import { fetchNewsIntelligence } from "./services/news-intelligence.js";
 
 const paperOrderSchema = z.object({
   idempotencyKey: z.string().min(4),
@@ -554,6 +555,20 @@ export async function buildApp(options: AppOptions = {}) {
     const symbol = query.data.symbol;
     const ticks = latestTicksBySymbol(repo.marketTicks()).length ? latestTicksBySymbol(repo.marketTicks()) : marketTicks;
     return ok(symbol ? ticks.find((tick) => tick.symbol === symbol) ?? null : ticks);
+  });
+
+  app.get("/market/news-intelligence", async (request, reply) => {
+    const query = z.object({ limit: z.coerce.number().int().positive().max(100).optional() }).safeParse(request.query);
+    if (!query.success) {
+      return sendError(reply, request.id, 400, "VALIDATION_ERROR", "Invalid news query", query.error.issues);
+    }
+
+    try {
+      const snapshot = await fetchNewsIntelligence(query.data.limit ?? 40);
+      return ok(snapshot);
+    } catch (error) {
+      return sendError(reply, request.id, 500, "INTERNAL_ERROR", error instanceof Error ? error.message : "Failed to fetch news intelligence");
+    }
   });
   app.get("/signals", async () => {
     if (liveSignals.length > 0) {

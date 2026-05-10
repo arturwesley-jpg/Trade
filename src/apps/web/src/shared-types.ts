@@ -136,3 +136,28 @@ export interface PaperSummary {
   winRatePct?: number;
   updatedAt: string;
 }
+
+export type NewsSentiment = "BULLISH" | "BEARISH" | "NEUTRAL";
+
+export interface NewsItem {
+  title: string;
+  link: string;
+  source: string;
+  publishedAt: string;
+  sentiment: NewsSentiment;
+  score: number;
+}
+
+export interface NewsIntelligenceSnapshot {
+  generatedAt: string;
+  channelCount: number;
+  totalArticles: number;
+  sentiment: NewsSentiment;
+  confidence: number;
+  bullishCount: number;
+  bearishCount: number;
+  neutralCount: number;
+  averageScore: number;
+  topSignals: string[];
+  items: NewsItem[];
+}

@@ -6,6 +6,7 @@ import type {
   PaperSummary,
   Position,
   ProviderStatusSnapshot,
+  NewsIntelligenceSnapshot,
   SentimentSnapshot,
   TradingSignal,
   WhaleEvent
@@ -87,6 +88,10 @@ export async function fetchWhaleEvents() {
 
 export async function fetchPaperSummary() {
   return requestJson<PaperSummary>("/paper/summary");
+}
+
+export async function fetchNewsIntelligence() {
+  return requestJson<NewsIntelligenceSnapshot>("/market/news-intelligence");
 }
 
 export async function openPaperOrder(payload: PaperOrderPayload) {

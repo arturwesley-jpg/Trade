@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, memo, type CSSProperties } from "react";
 import { useClerk, useUser } from "@clerk/clerk-react";
-import type { AlertEvent, MarketTick, PaperSummary, Position, ProviderStatusSnapshot, SentimentSnapshot, TradingSignal, WhaleEvent } from "./shared-types.js";
+import type { AlertEvent, MarketTick, NewsIntelligenceSnapshot, PaperSummary, Position, ProviderStatusSnapshot, SentimentSnapshot, TradingSignal, WhaleEvent } from "./shared-types.js";
 import {
   fetchAlerts,
   fetchHealth,
   fetchMarketTicks,
+  fetchNewsIntelligence,
   fetchPaperSummary,
   fetchPositions,
   fetchProviderStatuses,
@@ -71,7 +72,8 @@ const initialState = {
   sentiment: { data: null as SentimentSnapshot | null, status: "loading" as const },
   providerStatuses: { data: [] as ProviderStatusSnapshot[], status: "loading" as const },
   whales: { data: [] as WhaleEvent[], status: "loading" as const },
-  ticks: { data: [] as MarketTick[], status: "loading" as const }
+  ticks: { data: [] as MarketTick[], status: "loading" as const },
+  newsIntelligence: { data: null as NewsIntelligenceSnapshot | null, status: "loading" as const }
 };
 
 const indicatorEngine = [
@@ -233,6 +235,7 @@ const TradingHub = memo(function TradingHub({
   const [providerStatuses, setProviderStatuses] = useState<LoadState<ProviderStatusSnapshot[]>>(initialState.providerStatuses);
   const [whales, setWhales] = useState<LoadState<WhaleEvent[]>>(initialState.whales);
   const [positions, setPositions] = useState<LoadState<Position[]>>(initialState.positions);
+  const [newsIntelligence, setNewsIntelligence] = useState<LoadState<NewsIntelligenceSnapshot | null>>(initialState.newsIntelligence);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isPollingPaused, setIsPollingPaused] = useState(false);
   const [submittingSymbol, setSubmittingSymbol] = useState<string | null>(null);
@@ -258,7 +261,8 @@ const TradingHub = memo(function TradingHub({
       alertsResult,
       sentimentResult,
       whalesResult,
-      paperSummaryResult
+      paperSummaryResult,
+      newsIntelligenceResult
     ] = await Promise.allSettled([
       fetchHealth(),
       fetchMarketTicks(),
@@ -268,7 +272,8 @@ const TradingHub = memo(function TradingHub({
       fetchAlerts(),
       fetchSentimentSnapshot(),
       fetchWhaleEvents(),
-      fetchPaperSummary()
+      fetchPaperSummary(),
+      fetchNewsIntelligence()
     ]);
 
     if (refreshId.current !== requestId) return;
@@ -284,6 +289,7 @@ const TradingHub = memo(function TradingHub({
     applyResult(sentimentResult, setSentiment, null, updatedAt);
     applyResult(whalesResult, setWhales, [], updatedAt);
     applyResult(paperSummaryResult, setPaperSummary, null, updatedAt);
+    applyResult(newsIntelligenceResult, setNewsIntelligence, null, updatedAt);
   }, []);
 
   useEffect(() => {
@@ -394,6 +400,7 @@ const TradingHub = memo(function TradingHub({
             onSimulate={simulateLong}
             submittingSymbol={submittingSymbol}
             ticks={ticks}
+            newsIntelligence={newsIntelligence}
           />
         ) : null}
 
@@ -862,11 +869,13 @@ function PageHeader({
 
 function MarketPage({
   marketContext,
+  newsIntelligence,
   onSimulate,
   submittingSymbol,
   ticks
 }: {
   marketContext: ReturnType<typeof summarizeMarketContext>;
+  newsIntelligence: LoadState<NewsIntelligenceSnapshot | null>;
   onSimulate: (symbol: string, price: number) => Promise<void>;
   submittingSymbol: string | null;
   ticks: LoadState<MarketTick[]>;
@@ -919,6 +928,46 @@ function MarketPage({
           </table>
         </section>
       </div>
+      <section className="panel table-panel" aria-labelledby="news-intel-title">
+        <div className="panel-heading">
+          <span className="eyebrow">Convergencia de noticias</span>
+          <h2 id="news-intel-title">Radar de 12 canais cripto</h2>
+        </div>
+        {newsIntelligence.status === "loading" ? <p className="empty">Coletando noticias...</p> : null}
+        {newsIntelligence.status === "error" ? <PanelError title="Noticias indisponiveis" message={newsIntelligence.message} /> : null}
+        {newsIntelligence.data ? (
+          <>
+            <p className="panel-note">
+              Sentimento {newsIntelligence.data.sentiment} • Confianca {newsIntelligence.data.confidence}% •
+              Artigos {newsIntelligence.data.totalArticles} • Fontes {newsIntelligence.data.channelCount}
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fonte</th>
+                  <th>Titulo</th>
+                  <th>Leitura</th>
+                </tr>
+              </thead>
+              <tbody>
+                {newsIntelligence.data.items.slice(0, 12).map((item) => (
+                  <tr key={`${item.source}-${item.link || item.title}`}>
+                    <td>{item.source}</td>
+                    <td>
+                      {item.link ? (
+                        <a href={item.link} target="_blank" rel="noreferrer">
+                          {item.title}
+                        </a>
+                      ) : item.title}
+                    </td>
+                    <td>{item.sentiment} ({item.score})</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : null}
+      </section>
     </section>
   );
 }
