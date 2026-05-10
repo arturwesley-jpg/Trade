@@ -54,7 +54,11 @@ export async function fetchHealth() {
 }
 
 export async function fetchMarketTicks() {
-  return requestJson<MarketTick[]>("/market/ticker");
+  try {
+    return await requestJson<MarketTick[]>("/market/ticker");
+  } catch {
+    return fetchMarketTicksFromBinance();
+  }
 }
 
 export async function fetchSignals() {
@@ -223,4 +227,33 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return payload as T;
+}
+
+async function fetchMarketTicksFromBinance(): Promise<MarketTick[]> {
+  const symbols = ["BTCUSDT", "ETHUSDT"];
+
+  const responses = await Promise.all(
+    symbols.map(async (symbol) => {
+      const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+      if (!response.ok) {
+        throw new Error(`Binance ticker failed for ${symbol}: HTTP ${response.status}`);
+      }
+      return response.json() as Promise<{
+        symbol: string;
+        lastPrice: string;
+        priceChangePercent: string;
+        volume: string;
+        closeTime: number;
+      }>;
+    })
+  );
+
+  return responses.map((ticker) => ({
+    symbol: ticker.symbol.replace("USDT", "-USDT"),
+    price: Number(ticker.lastPrice),
+    change24hPct: Number(ticker.priceChangePercent),
+    volume24h: Number(ticker.volume),
+    timestamp: ticker.closeTime ?? Date.now(),
+    source: "binance" as const
+  }));
 }

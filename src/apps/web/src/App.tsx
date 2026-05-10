@@ -29,7 +29,7 @@ import {
   resolveAppRouteFromHash,
   summarizeMarketContext
 } from "./view-model.js";
-import { useWebSocket, type WebSocketStatus } from "./websocket-client.js";
+import type { WebSocketStatus } from "./websocket-client.js";
 import { apiBaseUrl } from "./api.js";
 import { ErrorBoundary } from "./components/ErrorBoundary.js";
 import { ToastContainer, useToast } from "./components/Toast.js";
@@ -236,7 +236,7 @@ const TradingHub = memo(function TradingHub({
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isPollingPaused, setIsPollingPaused] = useState(false);
   const [submittingSymbol, setSubmittingSymbol] = useState<string | null>(null);
-  const [wsStatus, setWsStatus] = useState<WebSocketStatus>("connecting");
+  const [wsStatus, setWsStatus] = useState<WebSocketStatus>("disconnected");
   const [notice, setNotice] = useState({
     kind: "status" as "status" | "alert",
     text: "Modo paper ativo: nenhuma ordem real sera enviada."
@@ -244,48 +244,6 @@ const TradingHub = memo(function TradingHub({
   const refreshId = useRef(0);
   const toast = useToast();
   const trading = useTrading();
-
-  // Legacy WebSocket for signals and positions
-  const wsUrl = apiBaseUrl.replace(/^http/, "ws") + "/ws";
-  useWebSocket({
-    url: wsUrl,
-    onMarketTick: (tick) => {
-      setTicks((prev) => {
-        const filtered = prev.data.filter((t) => t.symbol !== tick.symbol);
-        return {
-          ...prev,
-          data: [tick, ...filtered],
-          status: "success",
-          updatedAt: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        };
-      });
-    },
-    onSignalUpdate: (signal) => {
-      setSignals((prev) => {
-        const filtered = prev.data.filter((s) => s.symbol !== signal.symbol);
-        return {
-          ...prev,
-          data: [signal, ...filtered],
-          status: "success",
-          updatedAt: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        };
-      });
-    },
-    onPositionUpdate: (position) => {
-      setPositions((prev) => {
-        const filtered = prev.data.filter((p) => p.id !== position.id);
-        return {
-          ...prev,
-          data: [position, ...filtered],
-          status: "success",
-          updatedAt: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        };
-      });
-    },
-    onConnectionChange: (status) => {
-      setWsStatus(status);
-    }
-  });
 
   const refresh = useCallback(async () => {
     const requestId = refreshId.current + 1;
@@ -318,6 +276,7 @@ const TradingHub = memo(function TradingHub({
 
     applyResult(healthResult, setHealth, null, updatedAt);
     applyResult(ticksResult, setTicks, [], updatedAt);
+    setWsStatus(ticksResult.status === "fulfilled" ? "connected" : "error");
     applyResult(signalsResult, setSignals, [], updatedAt);
     applyResult(providerStatusesResult, setProviderStatuses, [], updatedAt);
     applyResult(positionsResult, setPositions, [], updatedAt);
